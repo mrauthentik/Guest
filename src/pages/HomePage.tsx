@@ -407,7 +407,7 @@ export default function HomePage() {
                 />
               </div>
               <p className="text-gray-500 text-base leading-relaxed">
-                Founded in 2015 by hospitality enthusiasts with a vision to fill a gap in Lagos'
+                Founded in 2022 by hospitality enthusiasts with a vision to fill a gap in Kwali Abuja'
                 premium short-stay market, Horemow Guest House began with just four rooms and a
                 relentless commitment to service.
               </p>
