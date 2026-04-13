@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BedDouble, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { BedDouble, Mail, Phone, MapPin, Globe, Share2, Link2 } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -22,7 +22,7 @@ export default function Footer() {
               Your premium home away from home, where every stay is a masterpiece.
             </p>
             <div className="flex items-center gap-3 mt-6">
-              {[Facebook, Instagram, Twitter].map((Icon, i) => (
+              {[Globe, Share2, Link2].map((Icon, i) => (
                 <button
                   key={i}
                   className="w-9 h-9 rounded-lg glass flex items-center justify-center text-gray-400 hover:text-brand-400 hover:border-brand-500/30 transition-all duration-200"
