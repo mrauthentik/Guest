@@ -227,6 +227,40 @@ h1, h2, h3 { font-family: "Playfair Display", serif; }
   border-color: rgba(16,188,150,0.6);
   box-shadow: 0 0 0 3px rgba(16,188,150,0.15);
 }
+/* Use this when an icon sits on the left side of the input */
+.input-icon-left {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem; /* extra left padding for icon */
+  background: rgba(13,13,26,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.75rem;
+  color: white;
+  font-family: inherit;
+  transition: all 0.2s;
+  outline: none;
+}
+.input-icon-left::placeholder { color: #6b7280; }
+.input-icon-left:focus {
+  border-color: rgba(16,188,150,0.6);
+  box-shadow: 0 0 0 3px rgba(16,188,150,0.15);
+}
+/* Left icon + right button (e.g. password toggle) */
+.input-icon-both {
+  width: 100%;
+  padding: 0.75rem 2.75rem; /* both sides */
+  background: rgba(13,13,26,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.75rem;
+  color: white;
+  font-family: inherit;
+  transition: all 0.2s;
+  outline: none;
+}
+.input-icon-both::placeholder { color: #6b7280; }
+.input-icon-both:focus {
+  border-color: rgba(16,188,150,0.6);
+  box-shadow: 0 0 0 3px rgba(16,188,150,0.15);
+}
 
 .input-label {
   display: block;

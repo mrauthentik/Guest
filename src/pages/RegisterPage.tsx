@@ -5,6 +5,17 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, BedDouble, ArrowRight } from 'luc
 import { authService } from '@/services/authService';
 import toast from 'react-hot-toast';
 
+const ICON_STYLE = {
+  position: 'absolute' as const,
+  left: '14px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  width: '16px',
+  height: '16px',
+  color: '#6b7280',
+  pointerEvents: 'none' as const,
+};
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -40,7 +51,7 @@ export default function RegisterPage() {
         phone:     form.phone,
         password:  form.password,
       });
-      toast.success('Account created! Check your email to confirm.');
+      toast.success('Account created! You can now sign in.');
       navigate('/login');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Registration failed.');
@@ -49,17 +60,19 @@ export default function RegisterPage() {
     }
   }
 
-  const fields = [
-    { key: 'full_name', label: 'Full Name',       type: 'text',     icon: User,  placeholder: 'John Doe' },
-    { key: 'email',     label: 'Email Address',    type: 'email',    icon: Mail,  placeholder: 'you@example.com' },
-    { key: 'phone',     label: 'Phone Number',     type: 'tel',      icon: Phone, placeholder: '+234 800 0000 000' },
-  ] as const;
+  const textFields = [
+    { key: 'full_name' as const, label: 'Full Name',    type: 'text',  Icon: User,  placeholder: 'John Doe' },
+    { key: 'email'     as const, label: 'Email Address', type: 'email', Icon: Mail,  placeholder: 'you@example.com' },
+    { key: 'phone'     as const, label: 'Phone Number',  type: 'tel',   Icon: Phone, placeholder: '+234 800 0000 000' },
+  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-20 relative">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-brand-500/6 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 left-1/4 w-64 h-64 bg-gold-400/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-72 h-72 rounded-full blur-3xl"
+          style={{ background: 'rgba(16,188,150,0.06)' }} />
+        <div className="absolute bottom-1/3 left-1/4 w-64 h-64 rounded-full blur-3xl"
+          style={{ background: 'rgba(240,180,41,0.05)' }} />
       </div>
 
       <motion.div
@@ -69,14 +82,16 @@ export default function RegisterPage() {
         className="w-full max-w-md"
       >
         <div className="glass rounded-3xl p-8 md:p-10 border border-white/10">
+
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <Link to="/" className="flex flex-col items-center gap-2">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-gold-400 flex items-center justify-center shadow-[0_0_30px_rgba(16,188,150,0.3)]">
-                <BedDouble className="w-7 h-7 text-dark-900" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(16,188,150,0.3)]"
+                style={{ background: 'linear-gradient(135deg, #10bc96, #f0b429)' }}>
+                <BedDouble className="w-7 h-7" style={{ color: '#08080f' }} />
               </div>
               <span className="font-display font-bold text-white">HOREMOW</span>
-              <span className="text-[10px] text-brand-400 tracking-[0.2em] uppercase -mt-1">Guest House</span>
+              <span className="text-[10px] tracking-[0.2em] uppercase -mt-1" style={{ color: '#10bc96' }}>Guest House</span>
             </Link>
           </div>
 
@@ -84,14 +99,16 @@ export default function RegisterPage() {
           <p className="text-gray-400 text-sm text-center mb-8">Join Horemow and start booking premium rooms.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {fields.map(({ key, label, type, icon: Icon, placeholder }) => (
+
+            {/* Text fields */}
+            {textFields.map(({ key, label, type, Icon, placeholder }) => (
               <div key={key}>
                 <label className="input-label">{label}</label>
-                <div className="relative">
-                  <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <div style={{ position: 'relative' }}>
+                  <Icon style={ICON_STYLE} />
                   <input
                     type={type}
-                    className="input pl-11"
+                    className="input-icon-left"
                     placeholder={placeholder}
                     value={form[key]}
                     onChange={update(key)}
@@ -101,13 +118,14 @@ export default function RegisterPage() {
               </div>
             ))}
 
+            {/* Password */}
             <div>
               <label className="input-label">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <div style={{ position: 'relative' }}>
+                <Lock style={ICON_STYLE} />
                 <input
                   type={showPwd ? 'text' : 'password'}
-                  className="input pl-11 pr-11"
+                  className="input-icon-both"
                   placeholder="Min. 6 characters"
                   value={form.password}
                   onChange={update('password')}
@@ -117,20 +135,27 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                  style={{
+                    position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)',
+                    color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center',
+                  }}
                 >
-                  {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPwd
+                    ? <EyeOff style={{ width: '16px', height: '16px' }} />
+                    : <Eye    style={{ width: '16px', height: '16px' }} />}
                 </button>
               </div>
             </div>
 
+            {/* Confirm password */}
             <div>
               <label className="input-label">Confirm Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <div style={{ position: 'relative' }}>
+                <Lock style={ICON_STYLE} />
                 <input
                   type={showPwd ? 'text' : 'password'}
-                  className="input pl-11"
+                  className="input-icon-left"
                   placeholder="Repeat password"
                   value={form.confirm}
                   onChange={update('confirm')}

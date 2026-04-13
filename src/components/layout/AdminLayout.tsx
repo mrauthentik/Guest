@@ -3,15 +3,16 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, CreditCard, BedDouble,
-  LogOut, ChevronRight, Menu, X,
+  LogOut, ChevronRight, Menu, X, MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
-  { to: '/admin',          label: 'Dashboard',   icon: LayoutDashboard, exact: true },
-  { to: '/admin/bookings', label: 'Bookings',    icon: BookOpen },
-  { to: '/admin/payments', label: 'Payments',    icon: CreditCard },
-  { to: '/admin/rooms',    label: 'Rooms',       icon: BedDouble },
+  { to: '/admin',             label: 'Dashboard',   icon: LayoutDashboard, exact: true },
+  { to: '/admin/bookings',    label: 'Bookings',    icon: BookOpen },
+  { to: '/admin/payments',    label: 'Payments',    icon: CreditCard },
+  { to: '/admin/rooms',       label: 'Rooms',       icon: BedDouble },
+  { to: '/admin/complaints',  label: 'Complaints',  icon: MessageSquare },
 ];
 
 interface Props { children: React.ReactNode }

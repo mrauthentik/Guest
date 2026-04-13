@@ -117,7 +117,7 @@ export default function HomePage() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#10bc96]/10 border border-[#10bc96]/30 text-[#079679] text-sm font-semibold w-fit mb-6">
               <span className="w-2 h-2 rounded-full bg-[#10bc96] animate-pulse" />
-              Now Booking · Lagos, Nigeria
+              Now Booking · Kwali, Abuja
             </div>
 
             {/* Headline */}
@@ -184,7 +184,7 @@ export default function HomePage() {
             >
               <div className="relative rounded-3xl overflow-hidden shadow-[0_40px_100px_rgba(16,188,150,0.15)]">
                 <img
-                  src="/images/hero-room.jpg"
+                  src="/images/guest (1).jpg"
                   alt="Luxury room at Horemow Guest House"
                   className="w-full h-[440px] object-cover"
                   onError={e => {
@@ -332,7 +332,7 @@ export default function HomePage() {
             >
               <div className="rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(16,188,150,0.1)]">
                 <img
-                  src="/images/mission-room.jpg"
+                  src="/images/guest (2).jpg"
                   alt="Horemow Guest House interior"
                   className="w-full h-[480px] object-cover"
                   onError={e => {
@@ -390,7 +390,7 @@ export default function HomePage() {
             >
               <div className="rounded-3xl overflow-hidden mb-6 shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
                 <img
-                  src="/images/story-1.jpg"
+                  src="/images/guest (3).jpg"
                   alt="Horemow founding story"
                   className="w-full h-72 object-cover"
                   onError={e => {
@@ -427,7 +427,7 @@ export default function HomePage() {
               </p>
               <div className="rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
                 <img
-                  src="/images/story-2.jpg"
+                  src="/images/guest (7).jpg"
                   alt="Horemow modern room design"
                   className="w-full h-64 object-cover"
                   onError={e => {
@@ -551,7 +551,7 @@ export default function HomePage() {
               {/* image below card */}
               <div className="mt-6 rounded-2xl overflow-hidden h-44 shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
                 <img
-                  src="/images/why-room.jpg"
+                  src="/images/guest (9).jpg"
                   alt="Horemow premium facilities"
                   className="w-full h-full object-cover"
                   onError={e => {
@@ -655,7 +655,7 @@ export default function HomePage() {
               style={{ minHeight: '400px' }}
             >
               <img
-                src="/images/cta-room.jpg"
+                src="/images/guest (5).jpg"
                 alt="Book your stay at Horemow"
                 className="absolute inset-0 w-full h-full object-cover"
                 onError={e => {

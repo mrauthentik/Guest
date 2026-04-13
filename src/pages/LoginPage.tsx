@@ -19,7 +19,17 @@ export default function LoginPage() {
       toast.success('Welcome back!');
       navigate('/');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Login failed. Please try again.');
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.toLowerCase().includes('email not confirmed')) {
+        toast.error(
+          'Email not confirmed. Go to Supabase Dashboard → Authentication → Settings and disable "Enable email confirmations".',
+          { duration: 8000 }
+        );
+      } else if (msg.toLowerCase().includes('invalid login credentials')) {
+        toast.error('Incorrect email or password. Please try again.');
+      } else {
+        toast.error(msg || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -29,8 +39,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-20 relative">
       {/* Background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-brand-500/6 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gold-400/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl"
+          style={{ background: 'rgba(16,188,150,0.06)' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full blur-3xl"
+          style={{ background: 'rgba(240,180,41,0.05)' }} />
       </div>
 
       <motion.div
@@ -39,16 +51,17 @@ export default function LoginPage() {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md"
       >
-        {/* Card */}
         <div className="glass rounded-3xl p-8 md:p-10 border border-white/10">
+
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <Link to="/" className="flex flex-col items-center gap-2">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-gold-400 flex items-center justify-center shadow-[0_0_30px_rgba(16,188,150,0.3)]">
-                <BedDouble className="w-7 h-7 text-dark-900" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(16,188,150,0.3)]"
+                style={{ background: 'linear-gradient(135deg, #10bc96, #f0b429)' }}>
+                <BedDouble className="w-7 h-7" style={{ color: '#08080f' }} />
               </div>
               <span className="font-display font-bold text-white">HOREMOW</span>
-              <span className="text-[10px] text-brand-400 tracking-[0.2em] uppercase -mt-1">Guest House</span>
+              <span className="text-[10px] tracking-[0.2em] uppercase -mt-1" style={{ color: '#10bc96' }}>Guest House</span>
             </Link>
           </div>
 
@@ -56,13 +69,18 @@ export default function LoginPage() {
           <p className="text-gray-400 text-sm text-center mb-8">Sign in to manage your reservations.</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+
+            {/* Email */}
             <div>
               <label className="input-label">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <div style={{ position: 'relative' }}>
+                <Mail style={{
+                  position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)',
+                  width: '16px', height: '16px', color: '#6b7280', pointerEvents: 'none',
+                }} />
                 <input
                   type="email"
-                  className="input pl-11"
+                  className="input-icon-left"
                   placeholder="you@example.com"
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
@@ -72,13 +90,17 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Password */}
             <div>
               <label className="input-label">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <div style={{ position: 'relative' }}>
+                <Lock style={{
+                  position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)',
+                  width: '16px', height: '16px', color: '#6b7280', pointerEvents: 'none',
+                }} />
                 <input
                   type={showPwd ? 'text' : 'password'}
-                  className="input pl-11 pr-11"
+                  className="input-icon-both"
                   placeholder="Your password"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
@@ -88,9 +110,13 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                  style={{
+                    position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)',
+                    color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center',
+                  }}
                 >
-                  {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPwd ? <EyeOff style={{ width: '16px', height: '16px' }} /> : <Eye style={{ width: '16px', height: '16px' }} />}
                 </button>
               </div>
             </div>

@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import {
   Home, BedDouble, BookOpen, LayoutDashboard,
   LogOut, LogIn, Menu, X, ChevronDown,
+  Users2, MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const navLinks = [
-  { to: '/',      label: 'Home',  icon: Home     },
-  { to: '/rooms', label: 'Rooms', icon: BedDouble },
+  { to: '/',        label: 'Home',    icon: Home     },
+  { to: '/rooms',   label: 'Rooms',   icon: BedDouble },
+  { to: '/about',   label: 'About',   icon: Users2 },
+  { to: '/contact', label: 'Contact', icon: MessageSquare },
 ];
 
 export default function Navbar() {
