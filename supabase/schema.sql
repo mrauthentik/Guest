@@ -236,3 +236,25 @@ insert into public.rooms (name, description, price_per_night, capacity, amenitie
     ARRAY['WiFi', 'AC', 'TV', 'Coffee', 'Bath']
   )
 on conflict do nothing;
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- ADMIN ACCOUNT SETUP
+-- ══════════════════════════════════════════════════════════════════════════════
+-- STEP 1: Go to your Supabase dashboard → Authentication → Users
+--         Click "Add user" and create:
+--           Email    : admin@horemow.com
+--           Password : Horemow@Admin2026!
+--
+-- STEP 2: After creating the user, run the SQL below to grant admin role.
+--         Replace the email if you used a different one.
+
+update public.profiles
+set role = 'admin',
+    full_name = 'Horemow Admin',
+    phone     = '+234 800 HOREMOW'
+where id = (
+  select id from auth.users where email = 'admin@horemow.com' limit 1
+);
+
+-- Verify it worked:
+-- select id, full_name, role from public.profiles where role = 'admin';
