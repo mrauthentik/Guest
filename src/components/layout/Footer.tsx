@@ -8,10 +8,10 @@ import {
 
 // ── column data ──────────────────────────────────────────────────────────────
 const ROOMS = [
-  { to: '/rooms', label: 'Executive Suite'     },
-  { to: '/rooms', label: 'Presidential Suite'  },
+  { to: '/rooms', label: 'Joy House'     },
+  { to: '/rooms', label: 'Peace House'  },
   { to: '/rooms', label: 'Deluxe Double Room'  },
-  { to: '/rooms', label: 'Honeymoon Suite'     },
+  { to: '/rooms', label: 'Grace House'     },
   { to: '/rooms', label: 'Family Suite'        },
   { to: '/rooms', label: 'Standard Room'       },
 ];
@@ -125,17 +125,36 @@ export default function Footer() {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
                 <img
-                  src="/images/guest (4).jpg"
+                  src="/images/guest (6).jpg"
                   alt="Horemow Guest House room"
                   className="w-full h-56 object-cover"
                   onError={e => {
+                    // Primary image failed — swap to another real photo
                     const t = e.target as HTMLImageElement;
-                    t.style.display = 'none';
-                    const p = t.parentElement!;
-                    p.style.height = '224px';
-                    p.style.background = 'linear-gradient(160deg, #0a4f43 0%, #042e28 100%)';
-                    p.style.display = 'flex'; p.style.alignItems = 'center'; p.style.justifyContent = 'center';
-                    p.innerHTML = `<div style="text-align:center;color:#10bc96"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 10px"><path d="M2 22V9l10-7 10 7v13"/><rect x="8" y="15" width="8" height="7"/></svg><p style="font-weight:700;font-size:0.9rem">HOREMOW<br/>Premium Rooms</p></div>`;
+                    t.src = '/images/guest (6).jpg';
+                    // If that also fails, show logo fallback
+                    t.onerror = () => {
+                      t.style.display = 'none';
+                      const p = t.parentElement!;
+                      p.style.height = '224px';
+                      p.style.background = 'linear-gradient(160deg, #0a4f43 0%, #042e28 100%)';
+                      p.style.display = 'flex';
+                      p.style.alignItems = 'center';
+                      p.style.justifyContent = 'center';
+                      p.style.flexDirection = 'column';
+                      p.style.gap = '12px';
+                      const img = document.createElement('img');
+                      img.src = '/logo.png';
+                      img.style.width = '60px';
+                      img.style.objectFit = 'contain';
+                      const label = document.createElement('p');
+                      label.textContent = 'HOREMOW GUEST HOUSE';
+                      label.style.color = '#10bc96';
+                      label.style.fontWeight = '700';
+                      label.style.fontSize = '0.8rem';
+                      p.appendChild(img);
+                      p.appendChild(label);
+                    };
                   }}
                 />
                 {/* Rating overlay */}
