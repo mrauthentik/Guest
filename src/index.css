@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    @apply bg-dark-900 text-white;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-dark-900 text-white antialiased;
+    background-image: radial-gradient(ellipse at 20% 50%, rgba(16,188,150,0.04) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 20%, rgba(240,180,41,0.03) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+
+  h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-dark-800; }
+  ::-webkit-scrollbar-thumb { @apply bg-brand-600 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-brand-500; }
+
+  ::selection { @apply bg-brand-600/40 text-white; }
+}
+
+/* ── Components ── */
+@layer components {
+  /* Glass cards */
+  .glass {
+    background: rgba(13, 13, 26, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .glass-brand {
+    background: rgba(16,188,150,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(16,188,150,0.2);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-400
+           text-white font-semibold rounded-xl transition-all duration-300
+           hover:shadow-[0_0_30px_rgba(16,188,150,0.4)] hover:-translate-y-0.5
+           active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-6 py-3 border border-brand-500/40
+           text-brand-400 hover:bg-brand-500/10 font-semibold rounded-xl
+           transition-all duration-300 hover:-translate-y-0.5
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center gap-2 px-6 py-3 bg-gold-400 hover:bg-gold-300
+           text-dark-900 font-bold rounded-xl transition-all duration-300
+           hover:shadow-[0_0_30px_rgba(240,180,41,0.4)] hover:-translate-y-0.5;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white
+           hover:bg-white/5 rounded-lg transition-all duration-200;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400
+           border border-red-500/30 hover:bg-red-500/20 rounded-lg transition-all duration-200;
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full px-4 py-3 bg-dark-800/80 border border-white/10 rounded-xl text-white
+           placeholder:text-gray-500 focus:outline-none focus:border-brand-500/60
+           focus:shadow-[0_0_0_3px_rgba(16,188,150,0.15)] transition-all duration-200;
+  }
+
+  .input-label {
+    @apply block text-sm font-medium text-gray-400 mb-1.5;
+  }
+
+  /* Cards */
+  .card {
+    @apply glass rounded-2xl p-6 transition-all duration-300
+           hover:border-white/15 hover:shadow-[0_20px_60px_rgba(0,0,0,0.3)];
+  }
+
+  .card-brand {
+    @apply glass-brand rounded-2xl p-6;
+  }
+
+  /* Status badges */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-pending    { @apply badge bg-yellow-500/15 text-yellow-400 border border-yellow-500/30; }
+  .badge-uploaded   { @apply badge bg-blue-500/15 text-blue-400 border border-blue-500/30; }
+  .badge-confirmed  { @apply badge bg-brand-500/15 text-brand-400 border border-brand-500/30; }
+  .badge-checkedin  { @apply badge bg-purple-500/15 text-purple-400 border border-purple-500/30; }
+  .badge-checkedout { @apply badge bg-gray-500/15 text-gray-400 border border-gray-500/30; }
+  .badge-cancelled  { @apply badge bg-red-500/15 text-red-400 border border-red-500/30; }
+
+  /* Section wrapper */
+  .section { @apply py-20 px-4; }
+  .container-max { @apply max-w-7xl mx-auto; }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-400 to-gold-400 bg-clip-text text-transparent;
+  }
+  .gradient-text-brand {
+    @apply bg-gradient-to-r from-brand-300 to-brand-500 bg-clip-text text-transparent;
+  }
+
+  /* Shimmer loading */
+  .shimmer {
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0.04) 25%,
+      rgba(255,255,255,0.08) 50%,
+      rgba(255,255,255,0.04) 75%);
+    background-size: 400% 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+
+  /* Glow effects */
+  .glow-brand { box-shadow: 0 0 30px rgba(16,188,150,0.15); }
+  .glow-gold  { box-shadow: 0 0 30px rgba(240,180,41,0.15); }
+
+  /* Divider */
+  .divider {
+    @apply w-16 h-1 bg-gradient-to-r from-brand-500 to-gold-400 rounded-full;
+  }
+
+  /* Table */
+  .table-row-hover { @apply hover:bg-white/3 transition-colors duration-150; }
+
+  /* Parallax container */
+  .parallax-container { overflow: hidden; }
+}
+
+/* ── Utilities ── */
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+}
+
+/* ── Animations ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* Number counter animation */
+.counter { font-variant-numeric: tabular-nums; }
+
+/* Page transitions */
+.page-enter        { opacity: 0; transform: translateY(20px); }
+.page-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.4s, transform 0.4s; }
+.page-exit         { opacity: 1; }
+.page-exit-active  { opacity: 0; transition: opacity 0.3s; }
