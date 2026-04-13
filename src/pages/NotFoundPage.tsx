@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { BedDouble, Home, Search } from 'lucide-react';
+import { Home, Search } from 'lucide-react';
 
 export default function NotFoundPage() {
   return (
@@ -25,9 +25,12 @@ export default function NotFoundPage() {
           404
         </motion.div>
 
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-gold-400 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(16,188,150,0.3)]">
-          <BedDouble className="w-8 h-8 text-dark-900" />
-        </div>
+        <img
+          src="/logo.png"
+          alt="Horemow"
+          className="mx-auto mb-6"
+          style={{ width: '72px', height: '72px', objectFit: 'contain' }}
+        />
 
         <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-3">Page Not Found</h1>
         <p className="text-gray-400 max-w-sm mx-auto mb-10">

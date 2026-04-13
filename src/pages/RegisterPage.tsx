@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Phone, BedDouble, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight } from 'lucide-react';
 import { authService } from '@/services/authService';
 import toast from 'react-hot-toast';
 
@@ -86,10 +86,11 @@ export default function RegisterPage() {
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <Link to="/" className="flex flex-col items-center gap-2">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(16,188,150,0.3)]"
-                style={{ background: 'linear-gradient(135deg, #10bc96, #f0b429)' }}>
-                <BedDouble className="w-7 h-7" style={{ color: '#08080f' }} />
-              </div>
+              <img
+                src="/logo.png"
+                alt="Horemow Guest House"
+                style={{ width: '72px', height: '72px', objectFit: 'contain' }}
+              />
               <span className="font-display font-bold text-white">HOREMOW</span>
               <span className="text-[10px] tracking-[0.2em] uppercase -mt-1" style={{ color: '#10bc96' }}>Guest House</span>
             </Link>

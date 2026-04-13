@@ -33,9 +33,11 @@ export default function AdminLayout({ children }: Props) {
       {/* Logo */}
       <div className="p-6 border-b border-white/8">
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-gold-400 flex items-center justify-center">
-            <BedDouble className="w-4.5 h-4.5 text-dark-900" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="Horemow"
+            style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+          />
           <div>
             <p className="font-display font-bold text-white text-sm">HOREMOW</p>
             <p className="text-[9px] text-gold-400 tracking-widest uppercase">Admin Panel</p>

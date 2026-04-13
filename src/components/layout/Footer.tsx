@@ -125,7 +125,7 @@ export default function Footer() {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
                 <img
-                  src="/images/cta-room.jpg"
+                  src="/images/guest (4).jpg"
                   alt="Horemow Guest House room"
                   className="w-full h-56 object-cover"
                   onError={e => {
@@ -290,12 +290,11 @@ export default function Footer() {
 
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #10bc96, #f0b429)' }}
-              >
-                <BedDouble className="w-4 h-4" style={{ color: '#07070e' }} />
-              </div>
+              <img
+                src="/logo.png"
+                alt="Horemow"
+                style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+              />
               <div>
                 <span className="font-black text-sm text-white block leading-tight">HOREMOW</span>
                 <span className="text-[9px] font-semibold tracking-[0.18em] uppercase" style={{ color: '#10bc96' }}>
