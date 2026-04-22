@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 import {
   BedDouble, Users, Star, Wifi, Wind, Tv, Coffee,
   Bath, Car, Dumbbell, ArrowRight, Search, SlidersHorizontal,
+  Globe, Flag,
 } from 'lucide-react';
 import { useRooms } from '@/hooks/useQueries';
 import { CardSkeleton, ErrorMessage } from '@/components/ui/LoadingStates';
-import type { Room } from '@/types';
+import type { Room, RoomCategory } from '@/types';
 import { formatCurrency } from '@/utils/format';
+import { useAuth } from '@/context/AuthContext';
 
 const fadeUp = {
   hidden:  { opacity: 0, y: 30 },
@@ -29,6 +31,24 @@ function AmenityIcon({ name }: { name: string }) {
       <Icon className="w-3 h-3 text-brand-400" />
       {name}
     </span>
+  );
+}
+
+/** Badge showing which guest category the room targets */
+function CategoryBadge({ category }: { category: RoomCategory }) {
+  if (category === 'both') return null;
+  const isForeigner = category === 'foreigner';
+  return (
+    <div
+      className={`absolute top-4 left-4 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full ${
+        isForeigner
+          ? 'bg-[#f0b429]/20 text-[#f0b429] border border-[#f0b429]/30'
+          : 'bg-[#10bc96]/20 text-[#10bc96] border border-[#10bc96]/30'
+      }`}
+    >
+      {isForeigner ? <Globe className="w-3 h-3" /> : <Flag className="w-3 h-3" />}
+      {isForeigner ? 'Foreigner' : 'Nigerian Resident'}
+    </div>
   );
 }
 
@@ -59,9 +79,10 @@ function RoomCard({ room, index }: { room: Room; index: number }) {
             className="w-full h-full object-cover"
             onError={e => { (e.target as HTMLImageElement).src = placeholder; }}
           />
-          {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-dark-900/80 via-transparent to-transparent" />
-          {/* Price badge */}
+          {/* Category badge — top left */}
+          <CategoryBadge category={room.category} />
+          {/* Price badge — top right */}
           <div className="absolute top-4 right-4 glass-brand px-3 py-1.5 rounded-full">
             <span className="text-brand-400 font-bold text-sm">{formatCurrency(room.price_per_night)}</span>
             <span className="text-gray-400 text-xs">/night</span>
@@ -100,10 +121,7 @@ function RoomCard({ room, index }: { room: Room; index: number }) {
             <span className="text-xs text-gray-400 ml-1">5.0</span>
           </div>
 
-          <Link
-            to={`/rooms/${room.id}`}
-            className="btn-primary mt-2 justify-center group"
-          >
+          <Link to={`/rooms/${room.id}`} className="btn-primary mt-2 justify-center group">
             Book This Room
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -114,16 +132,26 @@ function RoomCard({ room, index }: { room: Room; index: number }) {
 }
 
 export default function RoomsPage() {
+  const { profile } = useAuth();
   const { data: rooms, isLoading, error, refetch } = useRooms();
-  const [search,      setSearch]      = useState('');
-  const [maxPrice,    setMaxPrice]    = useState<number | ''>('');
-  const [maxCapacity, setMaxCapacity] = useState<number | ''>('');
-  const [showFilters, setShowFilters] = useState(false);
+
+  const [search,       setSearch]       = useState('');
+  const [maxPrice,     setMaxPrice]     = useState<number | ''>('');
+  const [maxCapacity,  setMaxCapacity]  = useState<number | ''>('');
+  const [showFilters,  setShowFilters]  = useState(false);
+
+  // PM § 4.1 — residency-based filtering:
+  // If user has a residency_status set → only show rooms that match their status OR 'both'
+  // Public visitors / users without residency set → show all rooms
+  const userResidency = profile?.residency_status;
 
   const filtered = (rooms ?? []).filter(r => {
+    // Residency filter (server-side logic mirrored client-side)
+    if (userResidency && r.category !== 'both' && r.category !== userResidency) return false;
+
     if (search      && !r.name.toLowerCase().includes(search.toLowerCase())) return false;
-    if (maxPrice    && r.price_per_night > Number(maxPrice))    return false;
-    if (maxCapacity && r.capacity        > Number(maxCapacity)) return false;
+    if (maxPrice    && r.price_per_night > Number(maxPrice))                  return false;
+    if (maxCapacity && r.capacity        > Number(maxCapacity))               return false;
     return true;
   });
 
@@ -144,6 +172,20 @@ export default function RoomsPage() {
           <p className="text-gray-400 text-lg max-w-xl mx-auto">
             Each room is a carefully crafted haven of luxury, comfort, and modern elegance.
           </p>
+
+          {/* Residency notice — only if logged in and residency is set */}
+          {userResidency && (
+            <div className={`inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full text-sm font-semibold ${
+              userResidency === 'foreigner'
+                ? 'bg-[#f0b429]/10 text-[#f0b429] border border-[#f0b429]/20'
+                : 'bg-[#10bc96]/10 text-[#10bc96] border border-[#10bc96]/20'
+            }`}>
+              {userResidency === 'foreigner'
+                ? <><Globe className="w-4 h-4" /> Showing rooms designated for foreigners</>
+                : <><Flag className="w-4 h-4" /> Showing rooms for Nigerian residents</>
+              }
+            </div>
+          )}
         </motion.div>
 
         {/* Search & Filter */}

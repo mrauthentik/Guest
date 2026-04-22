@@ -66,7 +66,7 @@ export function useCreateBooking() {
       bookingService.createBooking(user!.id, form, total),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['bookings'] });
-      toast.success('Booking created! Please proceed to payment.');
+      toast.success('Booking submitted! It is under 72-hour admin review.');
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -163,5 +163,20 @@ export function useRejectPayment() {
       toast.success('Payment rejected.');
     },
     onError: (err: Error) => toast.error(err.message),
+  });
+}
+
+// ── AUTO-CONFIRM (client-side fallback) ───────────────────────────────────────
+// Run once on app load; the real job runs via Supabase Edge Function / pg_cron
+export function useAutoConfirmReviews() {
+  const { isAdmin } = useAuth();
+  return useMutation({
+    mutationFn: () => bookingService.autoConfirmExpiredReviews(),
+    onSuccess: () => {
+      // Silent — no toast; this is background housekeeping
+    },
+    onError: () => {
+      // Silent — non-critical
+    },
   });
 }

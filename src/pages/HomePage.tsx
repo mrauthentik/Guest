@@ -6,6 +6,8 @@ import {
   Clock, Award, Users, ChevronRight, TrendingUp,
   Wifi, Coffee, MapPin, Phone, CalendarCheck,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { PageLoader } from '@/components/ui/LoadingStates';
 
 // ── Animated counter ──────────────────────────────────────────────────────────
 function Counter({ end, suffix = '' }: { end: number; suffix?: string }) {
@@ -66,8 +68,155 @@ function TypeWriter({ words }: { words: string[] }) {
   );
 }
 
-export default function HomePage() {
-  const heroRef   = useRef<HTMLDivElement>(null);
+// ══════════════════════════════════════════════════════════════════════════════
+// NEW VISITOR LANDING PAGE (no session)
+// ══════════════════════════════════════════════════════════════════════════════
+function VisitorLanding() {
+  return (
+    <div className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center">
+      {/* Full-screen campground background */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/images/guest (1).jpg"
+          alt="Horemow Campground"
+          className="w-full h-full object-cover"
+          onError={e => {
+            const t = e.target as HTMLImageElement;
+            t.style.display = 'none';
+            const p = t.parentElement!;
+            p.style.background = 'linear-gradient(135deg, #0d1a15 0%, #0a4f43 40%, #1c4b36 100%)';
+          }}
+        />
+        {/* Deep overlay for text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
+      </div>
+
+      {/* Floating orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#10bc96]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#f0b429]/8 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-3xl mx-auto">
+
+        {/* Live badge */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#10bc96]/40 bg-[#10bc96]/10 backdrop-blur-sm text-[#10bc96] text-sm font-semibold mb-6"
+        >
+          <span className="w-2 h-2 rounded-full bg-[#10bc96] animate-pulse" />
+          Now Booking · Kwali, Abuja
+        </motion.div>
+
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="text-5xl sm:text-6xl md:text-7xl font-black leading-[1.05] tracking-tight text-white mb-6"
+        >
+          Welcome to{' '}
+          <span
+            className="text-[#10bc96] block"
+            style={{ fontFamily: '"Playfair Display", serif', fontStyle: 'italic' }}
+          >
+            Horemow
+          </span>
+          Campground
+        </motion.h1>
+
+        {/* Typewriter subheading */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.25 }}
+          className="text-gray-200 text-xl leading-relaxed mb-10"
+        >
+          Experience{' '}
+          <span className="text-[#10bc96] font-semibold">
+            <TypeWriter words={['premium hospitality', 'world-class comfort', 'seamless booking', 'authentic Nigerian warmth']} />
+          </span>
+        </motion.p>
+
+        {/* Star rating */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="flex items-center gap-2 mb-10"
+        >
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star key={i} className="w-5 h-5 text-[#f0b429] fill-[#f0b429]" />
+          ))}
+          <span className="text-white font-bold ml-1">5.0</span>
+          <span className="text-gray-400 text-sm">· 320+ verified guests</span>
+        </motion.div>
+
+        {/* Main CTA */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.45, duration: 0.5 }}
+          className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
+        >
+          <Link
+            to="/register"
+            className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-[#10bc96] text-white font-bold rounded-2xl text-lg shadow-[0_15px_50px_rgba(16,188,150,0.4)] hover:bg-[#2dd6ae] hover:-translate-y-1 transition-all duration-200"
+          >
+            Book Now
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+          <Link
+            to="/rooms"
+            className="inline-flex items-center justify-center gap-2 px-10 py-4 border-2 border-white/30 text-white font-bold rounded-2xl text-lg hover:bg-white/10 hover:-translate-y-1 backdrop-blur-sm transition-all duration-200"
+          >
+            Explore Rooms
+          </Link>
+        </motion.div>
+
+        {/* Trust chips */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="flex flex-wrap justify-center gap-4 mt-10 text-sm text-gray-300"
+        >
+          {['Free cancellation window', 'Instant confirmation', 'Secure booking'].map(t => (
+            <span key={t} className="flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-[#10bc96]" />
+              {t}
+            </span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Bottom scroll hint */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-400 text-xs"
+      >
+        <span>Scroll to explore</span>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+          className="w-5 h-8 border-2 border-gray-500 rounded-full flex items-start justify-center pt-1"
+        >
+          <div className="w-1 h-2 bg-[#10bc96] rounded-full" />
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RETURNING USER HOME DASHBOARD (active session)
+// ══════════════════════════════════════════════════════════════════════════════
+function UserDashboard() {
+  const { profile } = useAuth();
+  const heroRef     = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
   const imgY        = useTransform(scrollY, [0, 500], [0, 60]);
 
@@ -79,24 +228,21 @@ export default function HomePage() {
   ];
 
   const whyItems = [
-    { icon: Shield,       title: 'Secure Booking',      desc: 'Bank-grade encrypted payments with instant confirmation emails.' },
-    { icon: Clock,        title: '24/7 Concierge',      desc: 'Our team is always on standby to make your stay perfect.' },
-    { icon: Award,        title: 'Award Winning',        desc: 'Voted Nigeria\'s best boutique guest house three years running.' },
-    { icon: CalendarCheck,title: 'Flexible Check-in',   desc: 'Early check-in and late check-out available on request.' },
+    { icon: Shield,       title: 'Secure Booking',    desc: 'Bank-grade encrypted payments with instant confirmation emails.' },
+    { icon: Clock,        title: '24/7 Concierge',    desc: 'Our team is always on standby to make your stay perfect.' },
+    { icon: Award,        title: 'Award Winning',      desc: "Voted Nigeria's best boutique guest house three years running." },
+    { icon: CalendarCheck,title: 'Flexible Check-in', desc: 'Early check-in and late check-out available on request.' },
   ];
 
   return (
     <div className="overflow-x-hidden bg-white text-[#1a1a2e]">
 
-      {/* ══════════════════════════════════════════════════════
-          HERO SECTION
-      ══════════════════════════════════════════════════════ */}
+      {/* ── Welcome hero ── */}
       <section
         ref={heroRef}
-        className="relative min-h-screen pt-24 pb-0 overflow-hidden"
+        className="relative min-h-[60vh] pt-24 pb-0 overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #f8fffe 0%, #f0fdf9 50%, #fefce8 100%)' }}
       >
-        {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.025] pointer-events-none"
           style={{
@@ -104,39 +250,35 @@ export default function HomePage() {
             backgroundSize: '72px 72px',
           }}
         />
+        <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 min-h-[calc(60vh-6rem)]">
 
-        <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 min-h-[calc(100vh-6rem)]">
-
-          {/* ── Left copy ── */}
+          {/* Left copy */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="flex-1 flex flex-col justify-center z-10"
           >
-            {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#10bc96]/10 border border-[#10bc96]/30 text-[#079679] text-sm font-semibold w-fit mb-6">
               <span className="w-2 h-2 rounded-full bg-[#10bc96] animate-pulse" />
-              Now Booking · Kwali, Abuja
+              Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}!
             </div>
 
-            {/* Headline */}
-            <h1 className="text-5xl md:text-6xl lg:text-[4.2rem] font-black leading-[1.08] tracking-tight text-[#0a0a1a] mb-5">
-              The Future of<br />
+            <h1 className="text-5xl md:text-6xl font-black leading-[1.08] tracking-tight text-[#0a0a1a] mb-5">
+              Your Home Away<br />
               <span
                 className="text-[#10bc96]"
                 style={{ fontFamily: '"Playfair Display", serif', fontStyle: 'italic' }}
               >
-                Premium Hospitality
+                From Home
               </span>
             </h1>
 
             <p className="text-gray-500 text-lg leading-relaxed max-w-xl mb-8">
-              Experience world-class comfort at Horemow Guest House — where thoughtfully designed
-              rooms, seamless online booking, and impeccable service redefine what a stay should feel like.
+              Manage your bookings, explore new rooms, or plan your next stay at
+              Horemow Campground — all in one place.
             </p>
 
-            {/* CTA row */}
             <div className="flex flex-wrap gap-4 mb-10">
               <Link
                 to="/rooms"
@@ -146,86 +288,50 @@ export default function HomePage() {
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
-                to="/register"
+                to="/my-bookings"
                 className="inline-flex items-center gap-2 px-7 py-3.5 border-2 border-[#10bc96] text-[#10bc96] font-bold rounded-xl text-base hover:bg-[#10bc96]/8 hover:-translate-y-0.5 transition-all duration-200"
               >
-                Book Now
+                My Bookings
               </Link>
             </div>
 
-            {/* Trust row */}
             <div className="flex items-center gap-6 text-sm text-gray-400 flex-wrap">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4 text-[#10bc96]" />
-                Instant confirmation
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4 text-[#10bc96]" />
-                Secure payment
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4 text-[#10bc96]" />
-                Free cancellation window
-              </span>
+              {['Instant confirmation', 'Secure payment', 'Free cancellation window'].map(t => (
+                <span key={t} className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4 text-[#10bc96]" />
+                  {t}
+                </span>
+              ))}
             </div>
           </motion.div>
 
-          {/* ── Right image ── */}
+          {/* Right image */}
           <motion.div
             initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
-            className="flex-1 relative flex justify-center items-center min-h-[520px] z-10"
+            className="flex-1 relative flex justify-center items-center min-h-[400px] z-10"
           >
-            {/* Main image */}
-            <motion.div
-              style={{ y: imgY }}
-              className="relative w-full max-w-[520px]"
-            >
+            <motion.div style={{ y: imgY }} className="relative w-full max-w-[500px]">
               <div className="relative rounded-3xl overflow-hidden shadow-[0_40px_100px_rgba(16,188,150,0.15)]">
                 <img
                   src="/images/guest (1).jpg"
-                  alt="Luxury room at Horemow Guest House"
-                  className="w-full h-[440px] object-cover"
+                  alt="Horemow Campground"
+                  className="w-full h-[380px] object-cover"
                   onError={e => {
                     const t = e.target as HTMLImageElement;
                     t.style.display = 'none';
-                    t.parentElement!.style.background =
-                      'linear-gradient(135deg, #0d1a15 0%, #0a4f43 40%, #1c4b36 100%)';
-                    t.parentElement!.style.display = 'flex';
-                    t.parentElement!.style.alignItems = 'center';
-                    t.parentElement!.style.justifyContent = 'center';
-                    t.parentElement!.innerHTML = `<div style="text-align:center;color:#10bc96;padding:60px 40px">
-                      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 16px"><path d="M2 22V9l10-7 10 7v13"/><rect x="8" y="15" width="8" height="7"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-                      <p style="font-size:1.1rem;font-weight:600;margin:0">HOREMOW<br/>GUEST HOUSE</p>
-                    </div>`;
+                    t.parentElement!.style.background = 'linear-gradient(135deg, #0d1a15 0%, #0a4f43 40%, #1c4b36 100%)';
+                    t.parentElement!.style.height = '380px';
                   }}
                 />
-                {/* Gradient overlay at bottom */}
                 <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-[#0a4f43]/60 to-transparent" />
               </div>
-
-              {/* Floating card — top right */}
+              {/* Floating card */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ delay: 0.6, duration: 0.5 }}
-                className="absolute -top-5 -right-6 bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] p-4 flex items-center gap-3 min-w-[180px]"
-              >
-                <div className="w-11 h-11 rounded-xl bg-[#10bc96]/10 flex items-center justify-center shrink-0">
-                  <BedDouble className="w-6 h-6 text-[#10bc96]" />
-                </div>
-                <div>
-                  <p className="font-bold text-[#0a0a1a] text-sm leading-tight">500+ Stays</p>
-                  <p className="text-gray-400 text-xs">Memorable moments</p>
-                </div>
-              </motion.div>
-
-              {/* Floating card — bottom left */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ delay: 0.75, duration: 0.5 }}
                 className="absolute -bottom-5 -left-6 bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] p-4 min-w-[200px]"
               >
                 <div className="flex items-center gap-1 mb-1">
@@ -240,26 +346,23 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-        {/* ── Hero bottom stats bar ── */}
-        <div className="max-w-7xl mx-auto px-6 pb-0 mt-16">
+        {/* Stats bar */}
+        <div className="max-w-7xl mx-auto px-6 pb-0 mt-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: BedDouble,    value: '20+',  label: 'Premium Rooms',   color: '#10bc96' },
-              { icon: Users,        value: '500+', label: 'Happy Guests',    color: '#f0b429' },
-              { icon: Star,         value: '5.0',  label: 'Guest Rating',    color: '#10bc96' },
-              { icon: CalendarCheck,value: '98%',  label: 'Satisfaction',    color: '#f0b429' },
+              { icon: BedDouble,    value: '20+',  label: 'Premium Rooms',  color: '#10bc96' },
+              { icon: Users,        value: '500+', label: 'Happy Guests',   color: '#f0b429' },
+              { icon: Star,         value: '5.0',  label: 'Guest Rating',   color: '#10bc96' },
+              { icon: CalendarCheck,value: '98%',  label: 'Satisfaction',   color: '#f0b429' },
             ].map(({ icon: Icon, value, label, color }, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + i * 0.1 }}
-                className="bg-white rounded-2xl p-5 shadow-[0_4px_30px_rgba(0,0,0,0.07)] flex items-center gap-4 group hover:-translate-y-1 transition-transform duration-200"
+                className="bg-white rounded-2xl p-5 shadow-[0_4px_30px_rgba(0,0,0,0.07)] flex items-center gap-4 hover:-translate-y-1 transition-transform duration-200"
               >
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: `${color}18` }}
-                >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18` }}>
                   <Icon className="w-5 h-5" style={{ color }} />
                 </div>
                 <div>
@@ -272,28 +375,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════
-          OUR MISSION
-      ══════════════════════════════════════════════════════ */}
+      {/* ── Our Mission ── */}
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
-            {/* Left text */}
             <motion.div
               initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
             >
-              <p className="text-[#10bc96] font-semibold text-sm uppercase tracking-widest mb-3">
-                Our Purpose
-              </p>
-              <h2 className="text-4xl md:text-5xl font-black text-[#0a0a1a] leading-tight mb-6">
-                Our Mission
-              </h2>
+              <p className="text-[#10bc96] font-semibold text-sm uppercase tracking-widest mb-3">Our Purpose</p>
+              <h2 className="text-4xl md:text-5xl font-black text-[#0a0a1a] leading-tight mb-6">Our Mission</h2>
               <p className="text-gray-500 text-base leading-relaxed mb-8">
-                At Horemow Guest House, we believe every traveller deserves more than just a bed.
+                At Horemow Campground Guest Houses, we believe every traveller deserves more than just a bed.
                 Our mission is to create a sanctuary where luxury, comfort, and authentic hospitality
                 converge — giving each guest an experience they will cherish long after checkout.
               </p>
@@ -301,8 +396,6 @@ export default function HomePage() {
                 From meticulously designed rooms to a booking process built on transparency,
                 we have reimagined what a premium guest house should be in modern Nigeria.
               </p>
-
-              {/* Bullet points */}
               <ul className="space-y-3">
                 {missionPoints.map((pt, i) => (
                   <motion.li
@@ -322,7 +415,6 @@ export default function HomePage() {
               </ul>
             </motion.div>
 
-            {/* Right image */}
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -341,17 +433,11 @@ export default function HomePage() {
                     const p = t.parentElement!;
                     p.style.height = '480px';
                     p.style.background = 'linear-gradient(160deg, #f0fdf9 0%, #ccfbee 100%)';
-                    p.style.display = 'flex';
-                    p.style.alignItems = 'center';
-                    p.style.justifyContent = 'center';
-                    p.innerHTML = `<div style="text-align:center;color:#10bc96">
-                      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M3 11V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3"/></svg>
-                      <p style="font-weight:700;font-size:1rem">Our Premium Rooms</p>
-                    </div>`;
+                    p.style.display = 'flex'; p.style.alignItems = 'center'; p.style.justifyContent = 'center';
+                    p.innerHTML = `<div style="text-align:center;color:#10bc96"><p style="font-weight:700;font-size:1rem">Our Premium Rooms</p></div>`;
                   }}
                 />
               </div>
-              {/* Accent card overlay */}
               <div className="absolute -bottom-6 -left-6 bg-[#0a4f43] rounded-2xl p-5 text-white shadow-xl">
                 <p className="font-black text-3xl mb-1">10+</p>
                 <p className="text-[#5eeac7] text-sm font-medium">Years of Excellence</p>
@@ -361,10 +447,56 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════
-          OUR STORY
-      ══════════════════════════════════════════════════════ */}
+      {/* ── Vision ── */}
       <section className="py-24 bg-[#fafbff]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="rounded-3xl overflow-hidden mb-6 shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
+                <img
+                  src="/images/guest (3).jpg"
+                  alt="Horemow Vision"
+                  className="w-full h-72 object-cover"
+                  onError={e => {
+                    const t = e.target as HTMLImageElement;
+                    t.style.display = 'none';
+                    const p = t.parentElement!;
+                    p.style.height = '18rem';
+                    p.style.background = 'linear-gradient(135deg, #0d1a15 0%, #0a4f43 100%)';
+                  }}
+                />
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <p className="text-[#10bc96] font-semibold text-sm uppercase tracking-widest mb-3">Looking Forward</p>
+              <h2 className="text-4xl md:text-5xl font-black text-[#0a0a1a] leading-tight mb-6">Our Vision</h2>
+              <p className="text-gray-500 text-base leading-relaxed mb-6">
+                To become the foremost campground guest house destination in the Federal Capital Territory —
+                a place where visitors from around the world and across Nigeria feel equally welcomed,
+                valued, and at home.
+              </p>
+              <p className="text-gray-500 text-base leading-relaxed">
+                We envision a future where Horemow Campground is synonymous with nature-integrated luxury,
+                setting the standard for eco-premium hospitality in West Africa.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Our Story ── */}
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -372,16 +504,13 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <p className="text-[#10bc96] font-semibold text-sm uppercase tracking-widest mb-2">
-              Who We Are
-            </p>
+            <p className="text-[#10bc96] font-semibold text-sm uppercase tracking-widest mb-2">Who We Are</p>
             <h2 className="text-4xl md:text-5xl font-black text-[#0a0a1a] leading-tight max-w-2xl">
-              Our Story
+              History of Horemow Campground
             </h2>
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* Left large image block */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -399,21 +528,16 @@ export default function HomePage() {
                     const p = t.parentElement!;
                     p.style.height = '18rem';
                     p.style.background = 'linear-gradient(135deg, #0d1a15 0%, #0a4f43 100%)';
-                    p.style.display = 'flex';
-                    p.style.alignItems = 'center';
-                    p.style.justifyContent = 'center';
-                    p.innerHTML = `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#10bc96" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
                   }}
                 />
               </div>
               <p className="text-gray-500 text-base leading-relaxed">
-                Founded in 2022 by hospitality enthusiasts with a vision to fill a gap in Kwali Abuja'
+                Founded in 2022 by hospitality enthusiasts with a vision to fill a gap in Kwali, Abuja's
                 premium short-stay market, Horemow Guest House began with just four rooms and a
                 relentless commitment to service.
               </p>
             </motion.div>
 
-            {/* Right: text + image */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -436,10 +560,6 @@ export default function HomePage() {
                     const p = t.parentElement!;
                     p.style.height = '16rem';
                     p.style.background = 'linear-gradient(135deg, #1c4b36 0%, #0d1a15 100%)';
-                    p.style.display = 'flex';
-                    p.style.alignItems = 'center';
-                    p.style.justifyContent = 'center';
-                    p.innerHTML = `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#2dd6ae" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`;
                   }}
                 />
               </div>
@@ -448,23 +568,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════
-          WHY CHOOSE HOREMOW (dark section)
-      ══════════════════════════════════════════════════════ */}
+      {/* ── Why Choose Horemow (dark) ── */}
       <section className="py-24" style={{ background: '#0d1117' }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-
-            {/* Left: heading + reasons */}
             <div>
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <p className="text-[#10bc96] font-semibold text-sm uppercase tracking-widest mb-3">
-                  The Horemow Difference
-                </p>
+                <p className="text-[#10bc96] font-semibold text-sm uppercase tracking-widest mb-3">The Horemow Difference</p>
                 <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-12">
                   Why Choose<br />Our Guest House
                 </h2>
@@ -493,7 +607,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right: "Trusted Network" card */}
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -501,28 +614,21 @@ export default function HomePage() {
               transition={{ duration: 0.7 }}
               className="relative"
             >
-              {/* Big card */}
               <div
                 className="rounded-3xl p-8 overflow-hidden relative"
                 style={{ background: 'linear-gradient(135deg, #0a4f43 0%, #1c4b36 50%, #042e28 100%)' }}
               >
-                {/* decorative orbs */}
                 <div className="absolute top-0 right-0 w-48 h-48 bg-[#10bc96]/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#f0b429]/8 rounded-full blur-3xl" />
-
                 <div className="relative z-10">
                   <div className="w-14 h-14 rounded-2xl bg-[#10bc96]/20 border border-[#10bc96]/30 flex items-center justify-center mb-6">
                     <TrendingUp className="w-7 h-7 text-[#10bc96]" />
                   </div>
-
-                  <h3 className="text-2xl font-black text-white mb-3">
-                    Trusted by 500+<br />Satisfied Guests
-                  </h3>
+                  <h3 className="text-2xl font-black text-white mb-3">Trusted by 500+<br />Satisfied Guests</h3>
                   <p className="text-[#5eeac7]/80 text-sm leading-relaxed mb-8">
                     From corporate executives to family travellers, our guests return again and again —
-                    testament to our unwavering commitment to delivering the finest hospitality experience in Lagos.
+                    testament to our unwavering commitment to delivering the finest hospitality experience.
                   </p>
-
                   <div className="grid grid-cols-2 gap-4 mb-8">
                     {[
                       { icon: Wifi,   label: 'High-speed WiFi' },
@@ -536,8 +642,6 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
-
-                  {/* Star rating */}
                   <div className="flex items-center gap-1.5 pt-4 border-t border-white/10">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star key={i} className="w-5 h-5 text-[#f0b429] fill-[#f0b429]" />
@@ -547,8 +651,6 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-
-              {/* image below card */}
               <div className="mt-6 rounded-2xl overflow-hidden h-44 shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
                 <img
                   src="/images/guest (9).jpg"
@@ -559,10 +661,7 @@ export default function HomePage() {
                     t.style.display = 'none';
                     const p = t.parentElement!;
                     p.style.background = 'linear-gradient(135deg, #131325 0%, #252545 100%)';
-                    p.style.display = 'flex';
-                    p.style.alignItems = 'center';
-                    p.style.justifyContent = 'center';
-                    p.innerHTML = `<p style="color:#10bc96;font-weight:600;font-size:0.9rem">Premium Facilities</p>`;
+                    p.innerHTML = `<p style="color:#10bc96;font-weight:600;font-size:0.9rem;margin:auto">Premium Facilities</p>`;
                   }}
                 />
               </div>
@@ -571,17 +670,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════
-          STATS COUNTER BAR (dark)
-      ══════════════════════════════════════════════════════ */}
+      {/* ── Stats counter (dark) ── */}
       <section className="py-20" style={{ background: '#07070e' }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { end: 500,  suffix: '+', label: 'Total Guests Served'  },
-              { end: 20,   suffix: '+', label: 'Premium Rooms'        },
-              { end: 98,   suffix: '%', label: 'Satisfaction Rate'    },
-              { end: 10,   suffix: '+', label: 'Years of Excellence'  },
+              { end: 500, suffix: '+', label: 'Total Guests Served' },
+              { end: 20,  suffix: '+', label: 'Premium Rooms' },
+              { end: 98,  suffix: '%', label: 'Satisfaction Rate' },
+              { end: 10,  suffix: '+', label: 'Years of Excellence' },
             ].map(({ end, suffix, label }, i) => (
               <motion.div
                 key={i}
@@ -590,10 +687,7 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
               >
-                <div
-                  className="text-5xl md:text-6xl font-black mb-2"
-                  style={{ color: i % 2 === 0 ? '#10bc96' : '#f0b429' }}
-                >
+                <div className="text-5xl md:text-6xl font-black mb-2" style={{ color: i % 2 === 0 ? '#10bc96' : '#f0b429' }}>
                   <Counter end={end} suffix={suffix} />
                 </div>
                 <p className="text-gray-400 text-sm font-medium">{label}</p>
@@ -603,30 +697,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════
-          FINAL CTA (dark with image)
-      ══════════════════════════════════════════════════════ */}
+      {/* ── Final CTA ── */}
       <section className="py-0 overflow-hidden" style={{ background: '#0d1117' }}>
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[480px]">
-
-            {/* Left text */}
             <motion.div
               initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               className="flex flex-col justify-center px-8 lg:px-16 py-20"
             >
-              <p className="text-[#10bc96] font-semibold text-sm uppercase tracking-widest mb-4">
-                Ready to stay?
-              </p>
+              <p className="text-[#10bc96] font-semibold text-sm uppercase tracking-widest mb-4">Ready to stay?</p>
               <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-6">
-                Want to experience<br />
-                <span style={{ color: '#f0b429' }}>the future of luxury</span><br />
-                guest house stays?
+                Plan your next<br />
+                <span style={{ color: '#f0b429' }}>Horemow stay</span><br />
+                today
               </h2>
               <p className="text-gray-400 text-base leading-relaxed mb-10 max-w-md">
-                Join hundreds of satisfied guests who have made Horemow their home away from home.
+                Browse our selection of rooms — from foreigner-designated suites to Nigerian-resident options.
                 Your perfect stay is just a few clicks away.
               </p>
               <div className="flex flex-wrap gap-4">
@@ -638,15 +726,14 @@ export default function HomePage() {
                   Browse Rooms
                 </Link>
                 <Link
-                  to="/register"
+                  to="/my-bookings"
                   className="inline-flex items-center gap-2 px-8 py-4 border border-white/20 text-white font-bold rounded-xl text-base hover:bg-white/5 transition-all duration-200"
                 >
-                  Create Free Account
+                  My Bookings
                 </Link>
               </div>
             </motion.div>
 
-            {/* Right image — full height */}
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -663,21 +750,9 @@ export default function HomePage() {
                   t.style.display = 'none';
                   const p = t.parentElement!;
                   p.style.background = 'linear-gradient(160deg, #0a4f43 0%, #042e28 60%, #07070e 100%)';
-                  p.style.display = 'flex';
-                  p.style.alignItems = 'center';
-                  p.style.justifyContent = 'center';
-                  p.innerHTML = `<div style="text-align:center;color:#10bc96;padding:40px">
-                    <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 16px"><path d="M2 22V9l10-7 10 7v13"/><rect x="8" y="15" width="8" height="7"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-                    <p style="font-size:1.25rem;font-weight:800">HOREMOW<br/>GUEST HOUSE</p>
-                  </div>`;
                 }}
               />
-              {/* Dark overlay */}
-              <div
-                className="absolute inset-0"
-                style={{ background: 'linear-gradient(90deg, rgba(13,17,23,0.4) 0%, transparent 50%)' }}
-              />
-              {/* Floating badge */}
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(13,17,23,0.4) 0%, transparent 50%)' }} />
               <div className="absolute bottom-8 left-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 text-white">
                 <div className="flex items-center gap-2 mb-1">
                   <Phone className="w-4 h-4 text-[#10bc96]" />
@@ -689,7 +764,17 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
     </div>
   );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ROOT EXPORT — detects session and renders correct view
+// ══════════════════════════════════════════════════════════════════════════════
+export default function HomePage() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return <PageLoader />;
+
+  return user ? <UserDashboard /> : <VisitorLanding />;
 }

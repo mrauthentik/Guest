@@ -1,14 +1,20 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Filter, Search, LogIn, LogOut } from 'lucide-react';
+import { Filter, Search, LogIn, LogOut, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { useAllBookings, useUpdateBookingStatus } from '@/hooks/useQueries';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { bookingService } from '@/services/bookingService';
 import { TableSkeleton, ErrorMessage } from '@/components/ui/LoadingStates';
 import { BookingStatusBadge, BookingTimeline } from '@/components/ui/StatusBadge';
 import { formatCurrency, formatDate, calcNights } from '@/utils/format';
 import type { BookingFilter, BookingStatus } from '@/types';
+import toast from 'react-hot-toast';
 
 const FILTERS: { label: string; value: BookingFilter }[] = [
   { label: 'All',              value: 'ALL'              },
+  { label: '⏳ Pending Review', value: 'PENDING_REVIEW'  },
+  { label: 'Approved',         value: 'APPROVED'         },
+  { label: 'Rejected',         value: 'REJECTED'         },
   { label: 'Pending Payment',  value: 'PENDING_PAYMENT'  },
   { label: 'Payment Uploaded', value: 'PAYMENT_UPLOADED' },
   { label: 'Confirmed',        value: 'CONFIRMED'        },
@@ -20,9 +26,34 @@ const FILTERS: { label: string; value: BookingFilter }[] = [
 export default function AdminBookingsPage() {
   const { data: bookings, isLoading, error, refetch } = useAllBookings();
   const updateStatus = useUpdateBookingStatus();
-  const [filter, setFilter] = useState<BookingFilter>('ALL');
-  const [search, setSearch] = useState('');
+  const qc = useQueryClient();
+
+  const [filter,   setFilter]   = useState<BookingFilter>('ALL');
+  const [search,   setSearch]   = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [noteMap,  setNoteMap]  = useState<Record<string, string>>({});
+
+  // ── Approve mutation ───────────────────────────────────────────────────────
+  const approveBooking = useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      bookingService.approveBooking(id, note),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      toast.success('Booking approved — guest notified to proceed with payment.');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  // ── Reject mutation ───────────────────────────────────────────────────────
+  const rejectBooking = useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      bookingService.rejectBooking(id, note),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      toast.success('Booking rejected.');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const filtered = (bookings ?? []).filter(b => {
     if (filter !== 'ALL' && b.status !== filter) return false;
@@ -37,17 +68,35 @@ export default function AdminBookingsPage() {
     return true;
   });
 
-  function canCheckIn(s: BookingStatus)  { return s === 'CONFIRMED'; }
-  function canCheckOut(s: BookingStatus) { return s === 'CHECKED_IN'; }
+  // ── Count pending-review bookings for badge ────────────────────────────────
+  const pendingCount = (bookings ?? []).filter(b => b.status === 'PENDING_REVIEW').length;
+
+  function canApprove(s: BookingStatus)   { return s === 'PENDING_REVIEW'; }
+  function canReject(s: BookingStatus)    { return s === 'PENDING_REVIEW'; }
+  function canCheckIn(s: BookingStatus)   { return s === 'CONFIRMED'; }
+  function canCheckOut(s: BookingStatus)  { return s === 'CHECKED_IN'; }
+  function canCancel(s: BookingStatus)    { return !['CANCELLED', 'CHECKED_OUT', 'REJECTED'].includes(s); }
+
+  const isBusy = approveBooking.isPending || rejectBooking.isPending || updateStatus.isPending;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-display font-bold text-white mb-1">Bookings Management</h2>
-        <p className="text-gray-400 text-sm">{filtered.length} booking{filtered.length !== 1 ? 's' : ''} shown.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="text-2xl font-display font-bold text-white mb-1">Bookings Management</h2>
+          <p className="text-gray-400 text-sm">{filtered.length} booking{filtered.length !== 1 ? 's' : ''} shown.</p>
+        </div>
+
+        {/* Pending review alert badge */}
+        {pendingCount > 0 && (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-semibold">
+            <AlertCircle className="w-4 h-4" />
+            {pendingCount} booking{pendingCount !== 1 ? 's' : ''} awaiting your review
+          </div>
+        )}
       </div>
 
-      {/* Controls */}
+      {/* Search */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -60,7 +109,7 @@ export default function AdminBookingsPage() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Status filters */}
       <div className="flex flex-wrap gap-2">
         <Filter className="w-4 h-4 text-gray-500 self-center" />
         {FILTERS.map(f => (
@@ -72,6 +121,11 @@ export default function AdminBookingsPage() {
             }`}
           >
             {f.label}
+            {f.value === 'PENDING_REVIEW' && pendingCount > 0 && (
+              <span className="ml-1.5 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {pendingCount}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -83,13 +137,18 @@ export default function AdminBookingsPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(b => {
-            const open = expanded === b.id;
+            const open   = expanded === b.id;
             const nights = calcNights(b.check_in_date, b.check_out_date);
+
+            // 72h review countdown
+            const reviewMs = b.review_expires_at ? new Date(b.review_expires_at).getTime() - Date.now() : 0;
+            const reviewHrs = Math.max(0, Math.ceil(reviewMs / 3_600_000));
+
             return (
               <motion.div
                 key={b.id}
                 layout
-                className="card cursor-pointer"
+                className={`card cursor-pointer ${b.status === 'PENDING_REVIEW' ? 'border-yellow-500/30' : ''}`}
                 onClick={() => setExpanded(open ? null : b.id)}
               >
                 {/* Summary row */}
@@ -97,6 +156,12 @@ export default function AdminBookingsPage() {
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="font-mono text-brand-400 text-sm font-semibold">{b.booking_reference}</span>
                     <BookingStatusBadge status={b.status} />
+                    {b.status === 'PENDING_REVIEW' && reviewHrs > 0 && (
+                      <span className="flex items-center gap-1 text-xs text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded-full">
+                        <Clock className="w-3 h-3" />
+                        {reviewHrs}h left to review
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <span className="text-gray-300 hidden md:inline">{b.profile?.full_name ?? '–'}</span>
@@ -121,41 +186,93 @@ export default function AdminBookingsPage() {
                       <div><p className="text-gray-500 text-xs">Nights</p><p className="text-white">{nights}</p></div>
                       <div><p className="text-gray-500 text-xs">Total</p><p className="text-brand-400 font-bold">{formatCurrency(b.total_amount)}</p></div>
                       <div><p className="text-gray-500 text-xs">Phone</p><p className="text-white">{b.profile?.phone ?? '–'}</p></div>
-                      <div><p className="text-gray-500 text-xs">Created</p><p className="text-white">{formatDate(b.created_at)}</p></div>
+                      <div><p className="text-gray-500 text-xs">Residency</p><p className="text-white capitalize">{(b.profile as { residency_status?: string })?.residency_status?.replace('_', ' ') ?? '–'}</p></div>
                     </div>
+
+                    {/* Admin note display */}
+                    {b.admin_note && (
+                      <div className="bg-white/4 rounded-xl px-4 py-3 text-sm text-gray-300">
+                        <p className="text-xs text-gray-500 mb-1">Admin note</p>
+                        {b.admin_note}
+                      </div>
+                    )}
 
                     {/* Timeline */}
                     <div className="overflow-x-auto">
                       <BookingTimeline status={b.status} />
                     </div>
 
-                    {/* Actions */}
+                    {/* Admin note input (shown when approve/reject available) */}
+                    {(canApprove(b.status) || canReject(b.status)) && (
+                      <div>
+                        <label className="input-label">Note to guest (optional)</label>
+                        <input
+                          type="text"
+                          className="input text-sm"
+                          placeholder="Reason for approval / rejection…"
+                          value={noteMap[b.id] ?? ''}
+                          onChange={e => setNoteMap(m => ({ ...m, [b.id]: e.target.value }))}
+                          onClick={e => e.stopPropagation()}
+                        />
+                      </div>
+                    )}
+
+                    {/* Action buttons */}
                     <div className="flex flex-wrap gap-3">
+                      {/* Approve */}
+                      {canApprove(b.status) && (
+                        <button
+                          onClick={() => approveBooking.mutate({ id: b.id, note: noteMap[b.id] })}
+                          disabled={isBusy}
+                          className="btn-primary text-sm px-4 py-2"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Approve Booking
+                        </button>
+                      )}
+
+                      {/* Reject */}
+                      {canReject(b.status) && (
+                        <button
+                          onClick={() => rejectBooking.mutate({ id: b.id, note: noteMap[b.id] })}
+                          disabled={isBusy}
+                          className="btn-danger text-sm"
+                        >
+                          <XCircle className="w-4 h-4" />
+                          Reject
+                        </button>
+                      )}
+
+                      {/* Check in */}
                       {canCheckIn(b.status) && (
                         <button
                           onClick={() => updateStatus.mutate({ id: b.id, status: 'CHECKED_IN' })}
-                          disabled={updateStatus.isPending}
+                          disabled={isBusy}
                           className="btn-primary text-sm px-4 py-2"
                         >
                           <LogIn className="w-4 h-4" />
                           Mark Checked In
                         </button>
                       )}
+
+                      {/* Check out */}
                       {canCheckOut(b.status) && (
                         <button
                           onClick={() => updateStatus.mutate({ id: b.id, status: 'CHECKED_OUT' })}
-                          disabled={updateStatus.isPending}
+                          disabled={isBusy}
                           className="btn-secondary text-sm px-4 py-2"
                         >
                           <LogOut className="w-4 h-4" />
                           Mark Checked Out
                         </button>
                       )}
-                      {!['CANCELLED', 'CHECKED_OUT'].includes(b.status) && (
+
+                      {/* Cancel */}
+                      {canCancel(b.status) && (
                         <button
                           onClick={() => updateStatus.mutate({ id: b.id, status: 'CANCELLED' })}
-                          disabled={updateStatus.isPending}
-                          className="btn-danger text-sm"
+                          disabled={isBusy}
+                          className="btn-ghost text-sm text-red-400 hover:bg-red-500/10"
                         >
                           Cancel Booking
                         </button>

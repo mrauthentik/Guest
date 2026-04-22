@@ -13,6 +13,9 @@ import type { Booking, BookingFilter } from '@/types';
 
 const FILTERS: { label: string; value: BookingFilter }[] = [
   { label: 'All',              value: 'ALL'              },
+  { label: 'Pending Review',   value: 'PENDING_REVIEW'   },
+  { label: 'Approved',         value: 'APPROVED'         },
+  { label: 'Rejected',         value: 'REJECTED'         },
   { label: 'Pending Payment',  value: 'PENDING_PAYMENT'  },
   { label: 'Payment Uploaded', value: 'PAYMENT_UPLOADED' },
   { label: 'Confirmed',        value: 'CONFIRMED'        },
@@ -24,8 +27,12 @@ const FILTERS: { label: string; value: BookingFilter }[] = [
 function BookingCard({ booking }: { booking: Booking }) {
   const cancelBooking = useCancelBooking();
   const nights = calcNights(booking.check_in_date, booking.check_out_date);
-  const canCancel = ['PENDING_PAYMENT', 'PAYMENT_UPLOADED'].includes(booking.status);
+  const canCancel = ['PENDING_REVIEW', 'PENDING_PAYMENT', 'PAYMENT_UPLOADED'].includes(booking.status);
   const canPay    = booking.status === 'PENDING_PAYMENT';
+
+  // Review window countdown (72h)
+  const reviewMs  = booking.review_expires_at ? new Date(booking.review_expires_at).getTime() - Date.now() : 0;
+  const reviewHrs = Math.max(0, Math.ceil(reviewMs / 3_600_000));
 
   return (
     <motion.div
@@ -71,6 +78,16 @@ function BookingCard({ booking }: { booking: Booking }) {
             </div>
           </div>
         </div>
+
+        {/* Review window notice */}
+        {booking.status === 'PENDING_REVIEW' && (
+          <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/8 border border-amber-500/20 rounded-lg px-3 py-2 mb-4">
+            <Clock className="w-3.5 h-3.5" />
+            {reviewHrs > 0
+              ? `Under review — admin has ${reviewHrs}h to approve or reject your booking.`
+              : 'Review window passed — booking will be auto-confirmed shortly.'}
+          </div>
+        )}
 
         {/* Expiry notice */}
         {booking.status === 'PENDING_PAYMENT' && (

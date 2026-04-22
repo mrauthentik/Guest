@@ -9,9 +9,19 @@ export const authService = {
       email:    form.email,
       password: form.password,
       options: {
+        // All fields land in raw_user_meta_data → picked up by handle_new_user() trigger
         data: {
-          full_name: form.full_name,
-          phone:     form.phone,
+          full_name:        form.full_name,
+          phone:            form.phone,
+          // PM § 3.2 — extended registration fields
+          gender:           form.gender           ?? null,
+          marital_status:   form.marital_status   ?? null,
+          age_bracket:      form.age_bracket      ?? null,
+          nationality:      form.nationality      ?? null,
+          residency_status: form.residency_status ?? null,
+          health_status:    form.health_status    ?? null,
+          health_notes:     form.health_notes     ?? null,
+          special_requests: form.special_requests ?? null,
         },
       },
     });
@@ -73,6 +83,6 @@ export const profileService = {
       .select('role')
       .eq('id', userId)
       .single();
-    return data?.role === 'admin';
+    return data?.role === 'admin' || data?.role === 'superadmin';
   },
 };

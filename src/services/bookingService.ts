@@ -10,17 +10,19 @@ function generateReference(): string {
 }
 
 export const bookingService = {
+  // ── Create booking ─────────────────────────────────────────────────────────
+  // PM § 5.2 — New bookings enter PENDING_REVIEW with a 72-hour window
   async createBooking(
     userId: string,
     form: BookingForm,
     totalAmount: number,
   ): Promise<Booking> {
-    // Check availability first
+    // Availability check
     const { data: conflicts } = await supabase
       .from('bookings')
       .select('id')
       .eq('room_id', form.room_id)
-      .not('status', 'in', '("CANCELLED","CHECKED_OUT")')
+      .not('status', 'in', '("CANCELLED","CHECKED_OUT","REJECTED")')
       .lt('check_in_date', form.check_out_date)
       .gt('check_out_date', form.check_in_date);
 
@@ -28,7 +30,9 @@ export const bookingService = {
       throw new Error('Room is not available for the selected dates.');
     }
 
-    const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(); // +2h
+    const now             = Date.now();
+    const reviewExpiresAt = new Date(now + 72 * 60 * 60 * 1000).toISOString(); // +72h
+    const expiresAt       = new Date(now + 74 * 60 * 60 * 1000).toISOString(); // grace past review
 
     const { data, error } = await supabase
       .from('bookings')
@@ -39,8 +43,9 @@ export const bookingService = {
         check_in_date:     form.check_in_date,
         check_out_date:    form.check_out_date,
         total_amount:      totalAmount,
-        status:            'PENDING_PAYMENT' as BookingStatus,
+        status:            'PENDING_REVIEW' as BookingStatus,
         booking_reference: generateReference(),
+        review_expires_at: reviewExpiresAt,
         expires_at:        expiresAt,
       }])
       .select(`
@@ -54,6 +59,7 @@ export const bookingService = {
     return data as Booking;
   },
 
+  // ── User: get own bookings ─────────────────────────────────────────────────
   async getUserBookings(userId: string): Promise<Booking[]> {
     const { data, error } = await supabase
       .from('bookings')
@@ -68,6 +74,7 @@ export const bookingService = {
     return (data ?? []) as Booking[];
   },
 
+  // ── Admin: get all bookings ───────────────────────────────────────────────
   async getAllBookings(): Promise<Booking[]> {
     const { data, error } = await supabase
       .from('bookings')
@@ -82,6 +89,7 @@ export const bookingService = {
     return (data ?? []) as Booking[];
   },
 
+  // ── Get single booking ────────────────────────────────────────────────────
   async getBooking(id: string): Promise<Booking> {
     const { data, error } = await supabase
       .from('bookings')
@@ -97,25 +105,74 @@ export const bookingService = {
     return data as Booking;
   },
 
-  async updateStatus(id: string, status: BookingStatus): Promise<void> {
+  // ── Update status ─────────────────────────────────────────────────────────
+  async updateStatus(id: string, status: BookingStatus, adminNote?: string): Promise<void> {
     const { error } = await supabase
       .from('bookings')
-      .update({ status })
+      .update({ status, ...(adminNote !== undefined ? { admin_note: adminNote } : {}) })
       .eq('id', id);
     if (error) throw error;
   },
 
+  // ── PM § 5.2 — Admin: Approve during review window ────────────────────────
+  // Approval moves booking to PENDING_PAYMENT so user can pay
+  async approveBooking(id: string, adminNote?: string): Promise<void> {
+    const now             = Date.now();
+    const paymentDeadline = new Date(now + 48 * 60 * 60 * 1000).toISOString(); // 48h to pay
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        status:     'PENDING_PAYMENT' as BookingStatus,
+        expires_at: paymentDeadline,
+        admin_note: adminNote ?? 'Approved by admin.',
+      })
+      .eq('id', id)
+      .in('status', ['PENDING_REVIEW', 'APPROVED']);
+
+    if (error) throw error;
+  },
+
+  // ── PM § 5.2 — Admin: Reject during review window ────────────────────────
+  async rejectBooking(id: string, adminNote?: string): Promise<void> {
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        status:     'REJECTED' as BookingStatus,
+        admin_note: adminNote ?? 'Rejected by admin.',
+      })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  // ── User / Admin: Cancel ──────────────────────────────────────────────────
   async cancelBooking(id: string): Promise<void> {
     await bookingService.updateStatus(id, 'CANCELLED');
   },
 
-  async cancelExpiredBookings(): Promise<void> {
+  // ── PM § 5.2 — Auto-confirm: expire review window on frontend ─────────────
+  // (Database-side auto-confirm runs via auto_confirm_pending_bookings() function)
+  async cancelExpiredPayments(): Promise<void> {
     const now = new Date().toISOString();
     const { error } = await supabase
       .from('bookings')
       .update({ status: 'CANCELLED' })
       .eq('status', 'PENDING_PAYMENT')
       .lt('expires_at', now);
-    if (error) console.error('Failed to cancel expired bookings:', error);
+    if (error) console.error('Failed to cancel expired payment bookings:', error);
+  },
+
+  // ── PM § 5.2 — Auto-confirm: trigger from frontend (client-side fallback) ──
+  async autoConfirmExpiredReviews(): Promise<void> {
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        status:     'CONFIRMED' as BookingStatus,
+        admin_note: 'Auto-confirmed after 72-hour review window.',
+      })
+      .eq('status', 'PENDING_REVIEW')
+      .lt('review_expires_at', now);
+    if (error) console.error('Failed to auto-confirm bookings:', error);
   },
 };

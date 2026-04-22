@@ -6,7 +6,7 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { roomService } from '@/services/roomService';
 import { TableSkeleton, ErrorMessage } from '@/components/ui/LoadingStates';
 import { formatCurrency } from '@/utils/format';
-import type { Room } from '@/types';
+import type { Room, RoomCategory } from '@/types';
 import toast from 'react-hot-toast';
 
 const DEFAULT_FORM: Omit<Room, 'id' | 'created_at'> = {
@@ -17,6 +17,7 @@ const DEFAULT_FORM: Omit<Room, 'id' | 'created_at'> = {
   is_active:       true,
   amenities:       ['WiFi', 'AC', 'TV'],
   images:          [],
+  category:        'both',
 };
 
 export default function AdminRoomsPage() {
@@ -56,6 +57,7 @@ export default function AdminRoomsPage() {
       is_active:       room.is_active,
       amenities:       room.amenities ?? [],
       images:          room.images ?? [],
+      category:        room.category ?? 'both',
     });
     setModal('edit');
   }
@@ -114,6 +116,13 @@ export default function AdminRoomsPage() {
                 <div className="flex flex-col items-end gap-1.5">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${room.is_active ? 'bg-brand-500/15 text-brand-400' : 'bg-gray-500/15 text-gray-400'}`}>
                     {room.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                    room.category === 'foreigner'         ? 'bg-[#f0b429]/15 text-[#f0b429]' :
+                    room.category === 'nigerian_resident' ? 'bg-[#10bc96]/15 text-[#10bc96]' :
+                                                           'bg-white/8 text-gray-400'
+                  }`}>
+                    {room.category === 'foreigner' ? 'Foreigner' : room.category === 'nigerian_resident' ? 'NG Resident' : 'All Guests'}
                   </span>
                   <span className="text-brand-400 font-bold text-sm">{formatCurrency(room.price_per_night)}/night</span>
                 </div>
@@ -259,6 +268,21 @@ export default function AdminRoomsPage() {
                       </span>
                     ))}
                   </div>
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="input-label">Guest Category *</label>
+                  <select
+                    className="input"
+                    value={form.category ?? 'both'}
+                    onChange={e => setForm(f => ({ ...f, category: e.target.value as RoomCategory }))}
+                    required
+                  >
+                    <option value="both">All Guests (Foreigner & Resident)</option>
+                    <option value="foreigner">Foreigners Only</option>
+                    <option value="nigerian_resident">Nigerian Residents Only</option>
+                  </select>
                 </div>
 
                 {/* Active toggle */}

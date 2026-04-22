@@ -14,6 +14,7 @@ import PaymentPage      from '@/pages/PaymentPage';
 import NotFoundPage     from '@/pages/NotFoundPage';
 import ContactPage      from '@/pages/ContactPage';
 import AboutPage        from '@/pages/AboutPage';
+import TestimoniesPage  from '@/pages/TestimoniesPage';
 import {
   TermsPage, PrivacyPage, RefundPolicyPage,
   BookingConditionsPage, CookiePolicyPage,
@@ -53,6 +54,7 @@ function PublicLayout() {
           <Route path="/rooms/:id"   element={<RoomDetailPage />} />
           <Route path="/about"       element={<AboutPage />} />
           <Route path="/contact"     element={<ContactPage />} />
+          <Route path="/testimonies" element={<TestimoniesPage />} />
 
           {/* Auth */}
           <Route path="/login"    element={<RedirectIfAuth><LoginPage /></RedirectIfAuth>} />

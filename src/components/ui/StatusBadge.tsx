@@ -3,9 +3,32 @@ import type { BookingStatus, PaymentStatus } from '@/types';
 import {
   Clock, CreditCard, CheckCircle2,
   LogIn, LogOut, XCircle, AlertCircle,
+  HourglassIcon, ThumbsUp, ThumbsDown,
 } from 'lucide-react';
 
 const bookingConfig: Record<BookingStatus, { label: string; icon: typeof Clock; color: string; bg: string; border: string }> = {
+  // PM § 5.2 — 3-Day Review Window statuses
+  PENDING_REVIEW: {
+    label:  'Pending Review',
+    icon:   HourglassIcon,
+    color:  'text-amber-400',
+    bg:     'bg-amber-500/10',
+    border: 'border-amber-500/30',
+  },
+  APPROVED: {
+    label:  'Approved',
+    icon:   ThumbsUp,
+    color:  'text-teal-400',
+    bg:     'bg-teal-500/10',
+    border: 'border-teal-500/30',
+  },
+  REJECTED: {
+    label:  'Rejected',
+    icon:   ThumbsDown,
+    color:  'text-rose-400',
+    bg:     'bg-rose-500/10',
+    border: 'border-rose-500/30',
+  },
   PENDING_PAYMENT: {
     label:  'Pending Payment',
     icon:   Clock,
@@ -80,15 +103,16 @@ export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
 // ── Status Timeline ───────────────────────────────────────────────────────────
 
 const steps: { status: BookingStatus; label: string; icon: typeof Clock }[] = [
-  { status: 'PENDING_PAYMENT',  label: 'Booked',    icon: Clock        },
-  { status: 'PAYMENT_UPLOADED', label: 'Paid',      icon: CreditCard   },
-  { status: 'CONFIRMED',        label: 'Confirmed', icon: CheckCircle2 },
-  { status: 'CHECKED_IN',       label: 'Check-in',  icon: LogIn        },
-  { status: 'CHECKED_OUT',      label: 'Check-out', icon: LogOut       },
+  { status: 'PENDING_REVIEW',   label: 'In Review', icon: HourglassIcon },
+  { status: 'PENDING_PAYMENT',  label: 'Pay',       icon: Clock         },
+  { status: 'PAYMENT_UPLOADED', label: 'Paid',      icon: CreditCard    },
+  { status: 'CONFIRMED',        label: 'Confirmed', icon: CheckCircle2  },
+  { status: 'CHECKED_IN',       label: 'Check-in',  icon: LogIn         },
+  { status: 'CHECKED_OUT',      label: 'Check-out', icon: LogOut        },
 ];
 
 const ORDER: BookingStatus[] = [
-  'PENDING_PAYMENT', 'PAYMENT_UPLOADED', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT',
+  'PENDING_REVIEW', 'PENDING_PAYMENT', 'PAYMENT_UPLOADED', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT',
 ];
 
 export function BookingTimeline({ status }: { status: BookingStatus }) {
@@ -97,6 +121,14 @@ export function BookingTimeline({ status }: { status: BookingStatus }) {
       <div className="flex items-center gap-2 text-red-400">
         <XCircle className="w-5 h-5" />
         <span className="text-sm font-medium">Booking Cancelled</span>
+      </div>
+    );
+  }
+  if (status === 'REJECTED') {
+    return (
+      <div className="flex items-center gap-2 text-rose-400">
+        <ThumbsDown className="w-5 h-5" />
+        <span className="text-sm font-medium">Booking Rejected by Admin</span>
       </div>
     );
   }
