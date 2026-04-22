@@ -16,7 +16,7 @@ import { useState, useRef } from 'react';
 const BarcodeStrips = () => (
   <div className="flex h-12 w-full justify-between items-center opacity-80 mt-2 px-4">
     {Array.from({ length: 30 }).map((_, i) => (
-      <div key={i} className="bg-white h-full" style={{ width: `${Math.max(1, Math.random() * 4)}px`, opacity: Math.random() * 0.5 + 0.5 }} />
+      <div key={i} className="bg-[#ffffff] h-full" style={{ width: `${Math.max(1, Math.random() * 4)}px`, opacity: Math.random() * 0.5 + 0.5 }} />
     ))}
   </div>
 );
@@ -177,47 +177,47 @@ function BookingCard({ booking }: { booking: Booking }) {
               {/* Ticket UI */}
               <div ref={ticketRef} className="bg-[#f0f4f8] rounded-[24px] overflow-hidden shadow-2xl relative w-full">
                 {/* Top Section */}
-                <div className="bg-brand-600 p-8 text-center text-white relative">
-                  <button onClick={() => setShowTicket(false)} className="absolute top-4 right-4 text-white/70 hover:text-white" data-html2canvas-ignore>
+                <div className="bg-[#079679] p-8 text-center text-[#ffffff] relative">
+                  <button onClick={() => setShowTicket(false)} className="absolute top-4 right-4 text-[rgba(255,255,255,0.7)] hover:text-[#ffffff]" data-html2canvas-ignore>
                     <X className="w-6 h-6" />
                   </button>
-                  <p className="text-brand-200 text-xs font-bold uppercase tracking-widest mb-1">Horemow Campground</p>
-                  <h3 className="font-display font-black text-3xl mb-4 text-white">Guest Pass</h3>
+                  <p className="text-[#99f5dd] text-xs font-bold uppercase tracking-widest mb-1">Horemow Campground</p>
+                  <h3 className="font-display font-black text-3xl mb-4 text-[#ffffff]">Guest Pass</h3>
                   
-                  <div className="inline-block bg-white/20 backdrop-blur-md px-6 py-2 rounded-full border border-white/30">
+                  <div className="inline-block bg-[rgba(255,255,255,0.2)] px-6 py-2 rounded-full border border-[rgba(255,255,255,0.3)]">
                     <p className="font-mono text-xl font-bold tracking-wider">{booking.booking_reference}</p>
                   </div>
                 </div>
 
                 {/* Scalloped edge effect */}
                 <div className="flex justify-between items-center -mt-4 relative px-2">
-                   <div className="w-8 h-8 rounded-full bg-black/80 -ml-4 shadow-inner" />
-                   <div className="flex-1 border-t-2 border-dashed border-gray-300 mx-2" />
-                   <div className="w-8 h-8 rounded-full bg-black/80 -mr-4 shadow-inner" />
+                   <div className="w-8 h-8 rounded-full bg-[rgba(0,0,0,0.8)] -ml-4 shadow-inner" />
+                   <div className="flex-1 border-t-2 border-dashed border-[#d1d5db] mx-2" />
+                   <div className="w-8 h-8 rounded-full bg-[rgba(0,0,0,0.8)] -mr-4 shadow-inner" />
                 </div>
 
                 {/* Details Section */}
-                <div className="p-8 pb-10 text-gray-800">
+                <div className="p-8 pb-10 text-[#1f2937]">
                   <div className="mb-6 text-center">
-                    <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Room</p>
+                    <p className="text-[#6b7280] text-xs font-bold uppercase tracking-wider mb-1">Room</p>
                     <p className="text-xl font-bold">{booking.room?.name}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-8">
                     <div>
-                      <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Check-in</p>
+                      <p className="text-[#6b7280] text-[10px] font-bold uppercase mb-1">Check-in</p>
                       <p className="font-semibold text-sm">{format(new Date(booking.check_in_date), 'd MMM yyyy')}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Check-out</p>
+                      <p className="text-[#6b7280] text-[10px] font-bold uppercase mb-1">Check-out</p>
                       <p className="font-semibold text-sm">{format(new Date(booking.check_out_date), 'd MMM yyyy')}</p>
                     </div>
                   </div>
 
-                  <div className="text-center bg-gray-800 text-white rounded-xl py-4 flex flex-col items-center">
-                     <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Scan at Reception</p>
+                  <div className="text-center bg-[#1f2937] text-[#ffffff] rounded-xl py-4 flex flex-col items-center">
+                     <p className="text-[10px] text-[#9ca3af] uppercase tracking-widest mb-1">Scan at Reception</p>
                      <BarcodeStrips />
-                     <p className="font-mono text-xs text-gray-400 mt-2 tracking-[0.2em]">{booking.id.split('-')[0].toUpperCase()}-{booking.booking_reference}</p>
+                     <p className="font-mono text-xs text-[#9ca3af] mt-2 tracking-[0.2em]">{booking.id.split('-')[0].toUpperCase()}-{booking.booking_reference}</p>
                   </div>
                 </div>
               </div>
