@@ -392,3 +392,23 @@ where id = (
 );
 
 -- Verify: select id, full_name, role from public.profiles where role = 'admin';
+
+-- ==========================================
+-- RLS (Row Level Security) POLICIES
+-- ==========================================
+
+-- Enable RLS on complaints and testimonials
+alter table public.complaints enable row level security;
+
+-- Complaints: Everyone can insert, only admins can read/update/delete
+create policy "Allow public to insert complaints"
+  on public.complaints for insert
+  to public
+  with check (true);
+
+-- Assuming admin interface uses service_role key or we can create an admin read policy:
+create policy "Allow full access to admins on complaints"
+  on public.complaints for all
+  using (
+    auth.uid() in (select id from public.profiles where role = 'admin' or role = 'superadmin')
+  );

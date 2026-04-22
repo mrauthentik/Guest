@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 import type { Room } from '@/types';
 
 export const roomService = {
@@ -67,5 +68,22 @@ export const roomService = {
       );
     if (error) throw error;
     return (data ?? []).length === 0;
+  },
+
+  async uploadRoomImage(file: File): Promise<string> {
+    const ext      = file.name.split('.').pop();
+    const filename = `${uuidv4()}.${ext}`;
+    const path     = `room-images/${filename}`;
+
+    const { error } = await supabase.storage
+      .from('rooms')
+      .upload(path, file, { upsert: false });
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+      .from('rooms')
+      .getPublicUrl(path);
+
+    return urlData.publicUrl;
   },
 };

@@ -29,6 +29,7 @@ export default function ContactPage() {
     email:   '',
     phone:   '',
     subject: '',
+    room_details: '',
     message: '',
   });
   const [loading,  setLoading]  = useState(false);
@@ -49,10 +50,10 @@ export default function ContactPage() {
         email:   form.email,
         phone:   form.phone || undefined,
         subject: form.subject,
-        message: form.message,
+        message: form.room_details ? `[Room Details: ${form.room_details}]\n\n${form.message}` : form.message,
       });
       setSuccess(true);
-      setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+      setForm({ name: '', email: '', phone: '', subject: '', room_details: '', message: '' });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to send message. Please try again.');
     } finally {
@@ -283,6 +284,35 @@ export default function ContactPage() {
                       {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
+
+                  {/* Room Details (Conditional) */}
+                  {['Complaint About Room', 'Booking Inquiry'].includes(form.subject) && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="overflow-hidden"
+                    >
+                      <label className="block text-sm font-semibold mb-1.5" style={{ color: '#374151' }}>
+                        Room Details *
+                      </label>
+                      <input
+                        type="text"
+                        value={form.room_details}
+                        onChange={update('room_details')}
+                        placeholder="e.g. Room Number 4A or Room Name"
+                        required
+                        style={{
+                          width: '100%', paddingTop: '12px', paddingBottom: '12px',
+                          paddingLeft: '16px', paddingRight: '16px',
+                          borderRadius: '12px', fontSize: '14px', outline: 'none',
+                          background: 'white', border: '1px solid #e5e7eb', color: '#1a1a2e',
+                          fontFamily: 'inherit', transition: 'border-color 0.2s, box-shadow 0.2s',
+                        }}
+                        onFocus={e => { e.currentTarget.style.borderColor = '#10bc96'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16,188,150,0.12)'; }}
+                        onBlur={e  => { e.currentTarget.style.borderColor = '#e5e7eb';  e.currentTarget.style.boxShadow = 'none'; }}
+                      />
+                    </motion.div>
+                  )}
 
                   {/* Message */}
                   <div>

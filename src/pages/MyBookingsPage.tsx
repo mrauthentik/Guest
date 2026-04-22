@@ -2,14 +2,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  BookOpen, Calendar, ArrowRight, Filter,
-  BedDouble, Clock, XCircle,
+  Calendar, Clock, ArrowRight, XCircle, QrCode, X,
 } from 'lucide-react';
 import { useUserBookings, useCancelBooking } from '@/hooks/useQueries';
 import { TableSkeleton, ErrorMessage, EmptyState } from '@/components/ui/LoadingStates';
 import { BookingStatusBadge, BookingTimeline } from '@/components/ui/StatusBadge';
 import { formatCurrency, formatDate, calcNights, formatCountdown } from '@/utils/format';
 import type { Booking, BookingFilter } from '@/types';
+import { format } from 'date-fns';
+
+const BarcodeStrips = () => (
+  <div className="flex h-12 w-full justify-between items-center opacity-80 mt-2 px-4">
+    {Array.from({ length: 30 }).map((_, i) => (
+      <div key={i} className="bg-white h-full" style={{ width: `${Math.max(1, Math.random() * 4)}px`, opacity: Math.random() * 0.5 + 0.5 }} />
+    ))}
+  </div>
+);
 
 const FILTERS: { label: string; value: BookingFilter }[] = [
   { label: 'All',              value: 'ALL'              },
@@ -26,9 +34,12 @@ const FILTERS: { label: string; value: BookingFilter }[] = [
 
 function BookingCard({ booking }: { booking: Booking }) {
   const cancelBooking = useCancelBooking();
+  const [showTicket, setShowTicket] = useState(false);
+
   const nights = calcNights(booking.check_in_date, booking.check_out_date);
   const canCancel = ['PENDING_REVIEW', 'PENDING_PAYMENT', 'PAYMENT_UPLOADED'].includes(booking.status);
   const canPay    = booking.status === 'PENDING_PAYMENT';
+  const hasTicket = ['PAYMENT_UPLOADED', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status);
 
   // Review window countdown (72h)
   const reviewMs  = booking.review_expires_at ? new Date(booking.review_expires_at).getTime() - Date.now() : 0;
@@ -104,6 +115,17 @@ function BookingCard({ booking }: { booking: Booking }) {
 
         {/* Actions */}
         <div className="flex flex-wrap gap-3 pt-3 border-t border-white/8">
+          {hasTicket && (
+            <button
+              onClick={() => setShowTicket(true)}
+              className="btn-primary"
+              style={{ background: 'linear-gradient(135deg, #10bc96, #5eeac7)', color: '#042e28' }}
+            >
+              <QrCode className="w-5 h-5" />
+              View Digital Pass
+            </button>
+          )}
+
           {canPay && (
             <Link to={`/bookings/${booking.id}/payment`} className="btn-primary text-sm px-4 py-2">
               <ArrowRight className="w-4 h-4" />
@@ -122,6 +144,69 @@ function BookingCard({ booking }: { booking: Booking }) {
           )}
         </div>
       </div>
+
+      {/* Ticket Modal */}
+      <AnimatePresence>
+        {showTicket && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowTicket(false)} />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-sm"
+            >
+              {/* Ticket UI */}
+              <div className="bg-[#f0f4f8] rounded-[24px] overflow-hidden shadow-2xl relative">
+                {/* Top Section */}
+                <div className="bg-brand-600 p-8 text-center text-white relative">
+                  <button onClick={() => setShowTicket(false)} className="absolute top-4 right-4 text-white/70 hover:text-white">
+                    <X className="w-6 h-6" />
+                  </button>
+                  <p className="text-brand-200 text-xs font-bold uppercase tracking-widest mb-1">Horemow Campground</p>
+                  <h3 className="font-display font-black text-3xl mb-4 text-white">Guest Pass</h3>
+                  
+                  <div className="inline-block bg-white/20 backdrop-blur-md px-6 py-2 rounded-full border border-white/30">
+                    <p className="font-mono text-xl font-bold tracking-wider">{booking.booking_reference}</p>
+                  </div>
+                </div>
+
+                {/* Scalloped edge effect */}
+                <div className="flex justify-between items-center -mt-4 relative px-2">
+                   <div className="w-8 h-8 rounded-full bg-black/80 -ml-4 shadow-inner" />
+                   <div className="flex-1 border-t-2 border-dashed border-gray-300 mx-2" />
+                   <div className="w-8 h-8 rounded-full bg-black/80 -mr-4 shadow-inner" />
+                </div>
+
+                {/* Details Section */}
+                <div className="p-8 pb-10 text-gray-800">
+                  <div className="mb-6 text-center">
+                    <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Room</p>
+                    <p className="text-xl font-bold">{booking.room?.name}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div>
+                      <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Check-in</p>
+                      <p className="font-semibold text-sm">{format(new Date(booking.check_in_date), 'd MMM yyyy')}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Check-out</p>
+                      <p className="font-semibold text-sm">{format(new Date(booking.check_out_date), 'd MMM yyyy')}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-center bg-gray-800 text-white rounded-xl py-4 flex flex-col items-center">
+                     <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Scan at Reception</p>
+                     <BarcodeStrips />
+                     <p className="font-mono text-xs text-gray-400 mt-2 tracking-[0.2em]">{booking.id.split('-')[0].toUpperCase()}-{booking.booking_reference}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Plus, Edit2, Eye, EyeOff, Trash2, X } from 'lucide-react';
+import { Plus, Edit2, Eye, EyeOff, Trash2, X, Upload } from 'lucide-react';
 import { useAllRooms } from '@/hooks/useQueries';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { roomService } from '@/services/roomService';
@@ -40,6 +40,27 @@ export default function AdminRoomsPage() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [form,    setForm]    = useState(DEFAULT_FORM);
   const [amenityInput, setAmenityInput] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingImage(true);
+    try {
+      const urls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const url = await roomService.uploadRoomImage(files[i]);
+        urls.push(url);
+      }
+      setForm(f => ({ ...f, images: [...(f.images ?? []), ...urls] }));
+      toast.success('Images uploaded!');
+    } catch (err) {
+      toast.error('Failed to upload images.');
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
+  }
 
   function openCreate() {
     setEditing(null);
@@ -268,6 +289,34 @@ export default function AdminRoomsPage() {
                       </span>
                     ))}
                   </div>
+                </div>
+
+                {/* Images */}
+                <div>
+                  <label className="input-label">Room Images</label>
+                  <div className="flex items-center gap-3 mb-3">
+                    <label className="btn-secondary text-sm px-3 py-2 shrink-0 cursor-pointer">
+                      {uploadingImage ? 'Uploading…' : <><Upload className="w-3.5 h-3.5" /> Upload Photos</>}
+                      <input type="file" accept="image/*" multiple className="hidden" disabled={uploadingImage} onChange={handleImageUpload} />
+                    </label>
+                    <span className="text-xs text-gray-500">You can upload multiple photos.</span>
+                  </div>
+                  {(form.images ?? []).length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {(form.images ?? []).map((img, i) => (
+                        <div key={i} className="relative group rounded-lg overflow-hidden border border-white/10 aspect-video">
+                          <img src={img} alt={`Room ${i+1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setForm(f => ({ ...f, images: f.images?.filter((_, index) => index !== i) }))}
+                            className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Category */}
