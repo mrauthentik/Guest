@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Filter, Search, LogIn, LogOut, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Filter, Search, LogIn, LogOut, CheckCircle, XCircle, Clock, AlertCircle, Download } from 'lucide-react';
 import { useAllBookings, useUpdateBookingStatus } from '@/hooks/useQueries';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { bookingService } from '@/services/bookingService';
@@ -77,6 +77,46 @@ export default function AdminBookingsPage() {
   function canCheckOut(s: BookingStatus)  { return s === 'CHECKED_IN'; }
   function canCancel(s: BookingStatus)    { return !['CANCELLED', 'CHECKED_OUT', 'REJECTED'].includes(s); }
 
+  function exportToCSV() {
+    if (!bookings || bookings.length === 0) return;
+    
+    // Create CSV header
+    const headers = [
+      'Booking Reference', 'Status', 'Room', 'Check-in', 'Check-out', 
+      'Nights', 'Total Amount', 'Guest Name', 'Email', 'Phone', 'Created At'
+    ];
+    
+    // Map data
+    const rows = filtered.map(b => [
+      b.booking_reference,
+      b.status,
+      b.room?.name || 'Unknown Room',
+      b.check_in_date,
+      b.check_out_date,
+      calcNights(b.check_in_date, b.check_out_date),
+      b.total_amount,
+      b.profile?.full_name || 'N/A',
+      b.profile?.email || 'N/A',
+      b.profile?.phone || 'N/A',
+      new Date(b.created_at).toISOString().split('T')[0]
+    ]);
+
+    // Escape CSV values
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    // Trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Horemow_Bookings_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   const isBusy = approveBooking.isPending || rejectBooking.isPending || updateStatus.isPending;
 
   return (
@@ -94,6 +134,15 @@ export default function AdminBookingsPage() {
             {pendingCount} booking{pendingCount !== 1 ? 's' : ''} awaiting your review
           </div>
         )}
+
+        <button 
+          onClick={exportToCSV}
+          disabled={!bookings || bookings.length === 0}
+          className="btn-secondary text-sm px-4 py-2 disabled:opacity-50"
+        >
+          <Download className="w-4 h-4" />
+          Export CSV
+        </button>
       </div>
 
       {/* Search */}

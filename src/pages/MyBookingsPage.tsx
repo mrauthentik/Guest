@@ -1,8 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Calendar, Clock, ArrowRight, XCircle, QrCode, X,
+  Calendar, Clock, ArrowRight, XCircle, QrCode, X, Download, Filter, BookOpen, BedDouble,
 } from 'lucide-react';
 import { useUserBookings, useCancelBooking } from '@/hooks/useQueries';
 import { TableSkeleton, ErrorMessage, EmptyState } from '@/components/ui/LoadingStates';
@@ -10,6 +9,9 @@ import { BookingStatusBadge, BookingTimeline } from '@/components/ui/StatusBadge
 import { formatCurrency, formatDate, calcNights, formatCountdown } from '@/utils/format';
 import type { Booking, BookingFilter } from '@/types';
 import { format } from 'date-fns';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { useState, useRef } from 'react';
 
 const BarcodeStrips = () => (
   <div className="flex h-12 w-full justify-between items-center opacity-80 mt-2 px-4">
@@ -35,6 +37,22 @@ const FILTERS: { label: string; value: BookingFilter }[] = [
 function BookingCard({ booking }: { booking: Booking }) {
   const cancelBooking = useCancelBooking();
   const [showTicket, setShowTicket] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const ticketRef = useRef<HTMLDivElement>(null);
+
+  const downloadPass = async () => {
+    if (!ticketRef.current) return;
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(ticketRef.current, { scale: 2, backgroundColor: null });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [canvas.width, canvas.height] });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`Horemow_Pass_${booking.booking_reference}.pdf`);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const nights = calcNights(booking.check_in_date, booking.check_out_date);
   const canCancel = ['PENDING_REVIEW', 'PENDING_PAYMENT', 'PAYMENT_UPLOADED'].includes(booking.status);
@@ -154,13 +172,13 @@ function BookingCard({ booking }: { booking: Booking }) {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm"
+              className="relative w-full max-w-sm flex flex-col items-center"
             >
               {/* Ticket UI */}
-              <div className="bg-[#f0f4f8] rounded-[24px] overflow-hidden shadow-2xl relative">
+              <div ref={ticketRef} className="bg-[#f0f4f8] rounded-[24px] overflow-hidden shadow-2xl relative w-full">
                 {/* Top Section */}
                 <div className="bg-brand-600 p-8 text-center text-white relative">
-                  <button onClick={() => setShowTicket(false)} className="absolute top-4 right-4 text-white/70 hover:text-white">
+                  <button onClick={() => setShowTicket(false)} className="absolute top-4 right-4 text-white/70 hover:text-white" data-html2canvas-ignore>
                     <X className="w-6 h-6" />
                   </button>
                   <p className="text-brand-200 text-xs font-bold uppercase tracking-widest mb-1">Horemow Campground</p>
@@ -203,6 +221,15 @@ function BookingCard({ booking }: { booking: Booking }) {
                   </div>
                 </div>
               </div>
+              
+              <button 
+                onClick={downloadPass}
+                disabled={isDownloading}
+                className="mt-6 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl backdrop-blur-md border border-white/20 font-bold transition-all disabled:opacity-50"
+              >
+                <Download className="w-5 h-5" />
+                {isDownloading ? 'Generating PDF…' : 'Download as PDF'}
+              </button>
             </motion.div>
           </div>
         )}

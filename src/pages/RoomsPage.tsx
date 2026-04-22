@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import {
   BedDouble, Users, Star, Wifi, Wind, Tv, Coffee,
   Bath, Car, Dumbbell, ArrowRight, Search, SlidersHorizontal,
-  Globe, Flag,
+  Globe, Flag, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { useRooms } from '@/hooks/useQueries';
 import { CardSkeleton, ErrorMessage } from '@/components/ui/LoadingStates';
@@ -54,8 +54,18 @@ function CategoryBadge({ category }: { category: RoomCategory }) {
 
 function RoomCard({ room, index }: { room: Room; index: number }) {
   const [hovered, setHovered] = useState(false);
-  const images = room.images ?? [];
-  const placeholder = `/images/room-${(index % 3) + 1}.jpg`;
+  const [currentImg, setCurrentImg] = useState(0);
+  
+  const images = room.images?.length ? room.images : [`/images/room-${(index % 3) + 1}.jpg`];
+
+  const nextImg = (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    setCurrentImg(prev => (prev + 1) % images.length);
+  };
+  const prevImg = (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    setCurrentImg(prev => (prev - 1 + images.length) % images.length);
+  };
 
   return (
     <motion.div
@@ -66,20 +76,46 @@ function RoomCard({ room, index }: { room: Room; index: number }) {
       viewport={{ once: true }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="group"
+      className="group h-full"
     >
-      <div className="glass rounded-2xl overflow-hidden border border-white/8 hover:border-brand-500/30 transition-all duration-500 hover:shadow-[0_20px_60px_rgba(16,188,150,0.1)] flex flex-col h-full">
-        {/* Image */}
-        <div className="relative h-52 overflow-hidden bg-dark-700">
-          <motion.img
-            animate={{ scale: hovered ? 1.06 : 1 }}
-            transition={{ duration: 0.5 }}
-            src={images[0] ?? placeholder}
-            alt={room.name}
-            className="w-full h-full object-cover"
-            onError={e => { (e.target as HTMLImageElement).src = placeholder; }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-dark-900/80 via-transparent to-transparent" />
+      <div className="glass rounded-2xl overflow-hidden border border-white/8 hover:border-brand-500/30 transition-all duration-500 hover:shadow-[0_20px_60px_rgba(16,188,150,0.1)] flex flex-col h-full relative">
+        {/* Image Slider */}
+        <div className="relative h-56 overflow-hidden bg-dark-700">
+          <AnimatePresence initial={false}>
+            <motion.img
+              key={currentImg}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, scale: hovered ? 1.05 : 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              src={images[currentImg]}
+              alt={room.name}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={e => { (e.target as HTMLImageElement).src = `/images/room-${(index % 3) + 1}.jpg`; }}
+            />
+          </AnimatePresence>
+          <div className="absolute inset-0 bg-gradient-to-t from-dark-900/90 via-transparent to-transparent pointer-events-none" />
+          
+          {/* Slider Controls */}
+          {images.length > 1 && (
+            <div className={`absolute inset-0 flex items-center justify-between px-2 transition-opacity duration-300 ${hovered ? 'opacity-100' : 'opacity-0'} pointer-events-none`}>
+              <button onClick={prevImg} className="p-1 rounded-full bg-black/40 text-white hover:bg-brand-500 backdrop-blur-md pointer-events-auto transition-colors">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button onClick={nextImg} className="p-1 rounded-full bg-black/40 text-white hover:bg-brand-500 backdrop-blur-md pointer-events-auto transition-colors">
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
+          {/* Dots */}
+          {images.length > 1 && (
+            <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-1.5 z-10">
+              {images.map((_, i) => (
+                <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentImg ? 'bg-brand-400 w-3' : 'bg-white/50'}`} />
+              ))}
+            </div>
+          )}
           {/* Category badge — top left */}
           <CategoryBadge category={room.category} />
           {/* Price badge — top right */}
