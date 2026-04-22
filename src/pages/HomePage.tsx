@@ -195,7 +195,7 @@ function VisitorLanding() {
       </div>
 
       {/* Bottom scroll hint */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
@@ -209,7 +209,7 @@ function VisitorLanding() {
         >
           <div className="w-1 h-2 bg-[#10bc96] rounded-full" />
         </motion.div>
-      </motion.div>
+      </motion.div> */}
     </div>
   );
 }
