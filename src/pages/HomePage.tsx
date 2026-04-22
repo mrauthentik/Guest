@@ -123,7 +123,10 @@ function VisitorLanding() {
           >
             Horemow
           </span>
-          Campground
+          Campground 
+          <span className="text-[#10bc96] block">
+            Guest Houses
+          </span>
         </motion.h1>
 
         {/* Typewriter subheading */}
