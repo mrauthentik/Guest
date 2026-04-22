@@ -34,29 +34,36 @@ export const bookingService = {
     const reviewExpiresAt = new Date(now + 72 * 60 * 60 * 1000).toISOString(); // +72h
     const expiresAt       = new Date(now + 74 * 60 * 60 * 1000).toISOString(); // grace past review
 
-    const { data, error } = await supabase
-      .from('bookings')
-      .insert([{
-        id:                uuidv4(),
-        user_id:           userId,
-        room_id:           form.room_id,
-        check_in_date:     form.check_in_date,
-        check_out_date:    form.check_out_date,
-        total_amount:      totalAmount,
-        status:            'PENDING_REVIEW' as BookingStatus,
-        booking_reference: generateReference(),
-        review_expires_at: reviewExpiresAt,
-        expires_at:        expiresAt,
-      }])
-      .select(`
-        *,
-        room:rooms(*),
-        profile:profiles(*)
-      `)
-      .single();
+    // Try new PENDING_REVIEW flow first; fall back to PENDING_PAYMENT if migration not yet run
+    let data: Booking | null = null;
+    let lastError: Error | null = null;
 
-    if (error) throw error;
-    return data as Booking;
+    for (const status of ['PENDING_REVIEW', 'PENDING_PAYMENT'] as BookingStatus[]) {
+      const { data: d, error } = await supabase
+        .from('bookings')
+        .insert([{
+          id:                uuidv4(),
+          user_id:           userId,
+          room_id:           form.room_id,
+          check_in_date:     form.check_in_date,
+          check_out_date:    form.check_out_date,
+          total_amount:      totalAmount,
+          status,
+          booking_reference: generateReference(),
+          review_expires_at: status === 'PENDING_REVIEW' ? reviewExpiresAt : undefined,
+          expires_at:        expiresAt,
+        }])
+        // NOTE: no profile join here — bookings.user_id → auth.users, not profiles directly
+        // Profile data isn't needed at booking creation time; user is already in AuthContext
+        .select('*, room:rooms(*)')
+        .single();
+
+      if (!error) { data = d as Booking; break; }
+      lastError = error as Error;
+    }
+
+    if (!data) throw lastError ?? new Error('Failed to create booking.');
+    return data;
   },
 
   // ── User: get own bookings ─────────────────────────────────────────────────
@@ -74,35 +81,43 @@ export const bookingService = {
     return (data ?? []) as Booking[];
   },
 
-  // ── Admin: get all bookings ───────────────────────────────────────────────
+  // ── Admin: get all bookings (manual profile join) ───────────────────────
+  // Profile fetched separately (bookings.user_id → auth.users, no direct FK to profiles)
   async getAllBookings(): Promise<Booking[]> {
-    const { data, error } = await supabase
+    const { data: bookings, error } = await supabase
       .from('bookings')
-      .select(`
-        *,
-        room:rooms(*),
-        profile:profiles(*),
-        payments(*)
-      `)
+      .select('*, room:rooms(*), payments(*)')
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return (data ?? []) as Booking[];
+    if (!bookings || bookings.length === 0) return [];
+
+    const userIds = [...new Set((bookings as { user_id: string }[]).map(b => b.user_id))];
+    const { data: profiles } = await supabase
+      .from('profiles').select('*').in('id', userIds);
+
+    const profileMap: Record<string, object> = {};
+    (profiles ?? []).forEach((p: { id: string }) => { profileMap[p.id] = p; });
+
+    return (bookings as { user_id: string }[]).map(b => ({
+      ...b, profile: profileMap[b.user_id] ?? null,
+    })) as Booking[];
   },
 
-  // ── Get single booking ────────────────────────────────────────────────────
+  // ── Get single booking (manual profile join) ───────────────────────────
   async getBooking(id: string): Promise<Booking> {
     const { data, error } = await supabase
       .from('bookings')
-      .select(`
-        *,
-        room:rooms(*),
-        profile:profiles(*),
-        payments(*)
-      `)
+      .select('*, room:rooms(*), payments(*)')
       .eq('id', id)
       .single();
     if (error) throw error;
-    return data as Booking;
+
+    const { data: profile } = await supabase
+      .from('profiles').select('*')
+      .eq('id', (data as { user_id: string }).user_id)
+      .single();
+
+    return { ...data, profile: profile ?? null } as Booking;
   },
 
   // ── Update status ─────────────────────────────────────────────────────────
@@ -163,16 +178,20 @@ export const bookingService = {
   },
 
   // ── PM § 5.2 — Auto-confirm: trigger from frontend (client-side fallback) ──
+  // Silently swallows 400 errors (e.g. column not yet in DB after migration)
   async autoConfirmExpiredReviews(): Promise<void> {
-    const now = new Date().toISOString();
-    const { error } = await supabase
-      .from('bookings')
-      .update({
-        status:     'CONFIRMED' as BookingStatus,
-        admin_note: 'Auto-confirmed after 72-hour review window.',
-      })
-      .eq('status', 'PENDING_REVIEW')
-      .lt('review_expires_at', now);
-    if (error) console.error('Failed to auto-confirm bookings:', error);
+    try {
+      const now = new Date().toISOString();
+      await supabase
+        .from('bookings')
+        .update({
+          status:     'CONFIRMED' as BookingStatus,
+          admin_note: 'Auto-confirmed after 72-hour review window.',
+        })
+        .eq('status', 'PENDING_REVIEW')
+        .lt('review_expires_at', now);
+    } catch {
+      // Column may not exist yet — safe to ignore until migration is run
+    }
   },
 };

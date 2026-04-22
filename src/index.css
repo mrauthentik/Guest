@@ -294,18 +294,12 @@ h1, h2, h3 { font-family: "Playfair Display", serif; }
   padding: 1.5rem;
 }
 
-/* ── Gradient text ── */
+/* ── Accent text (formerly gradient-text) ── */
 .gradient-text {
-  background: linear-gradient(to right, #2dd6ae, #f0b429);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #10bc96;
 }
 .gradient-text-brand {
-  background: linear-gradient(to right, #5eeac7, #10bc96);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #10bc96;
 }
 
 /* ── Divider ── */

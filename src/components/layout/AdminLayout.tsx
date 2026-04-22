@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, CreditCard, BedDouble,
-  LogOut, ChevronRight, Menu, X, MessageSquare,
+  LogOut, ChevronRight, Menu, X, MessageSquare, Home,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -138,7 +138,15 @@ export default function AdminLayout({ children }: Props) {
               <p className="text-xs text-gray-500 hidden sm:block">Horemow Guest House Management</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* Back to site */}
+            <Link
+              to="/"
+              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 transition-all border border-white/8 hover:border-white/15"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Back to Site</span>
+            </Link>
             <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
             <span className="text-xs text-gray-400 hidden sm:inline">Live</span>
           </div>

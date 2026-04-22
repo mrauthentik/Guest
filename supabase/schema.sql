@@ -48,7 +48,7 @@ create table if not exists public.rooms (
 -- PM § 5.2 — 3-Day Review Window; status expanded
 create table if not exists public.bookings (
   id                uuid primary key default uuid_generate_v4(),
-  user_id           uuid not null references auth.users on delete cascade,
+  user_id           uuid not null references public.profiles(id) on delete cascade,
   room_id           uuid not null references public.rooms on delete restrict,
   check_in_date     date not null,
   check_out_date    date not null,
